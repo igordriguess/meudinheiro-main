@@ -27,35 +27,30 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
   const mobileLinks = [
     {
       label: 'Simulador principal',
-      description: 'Compare quanto seu dinheiro pode render',
       icon: BarChart3,
       path: '/',
       sectionId: 'simulador',
     },
     {
       label: 'Comparar investimentos',
-      description: 'Veja CDB, Poupança e Tesouro lado a lado',
       icon: Scale,
       path: '/',
       sectionId: 'comparar',
     },
     {
       label: 'Simular pelo patrimônio',
-      description: 'Estime sua renda mensal com o valor investido',
       icon: WalletCards,
       path: '/',
       sectionId: 'simule-pelo-patrimonio',
     },
     {
       label: 'Planejar objetivos',
-      description: 'Metas de patrimônio e renda mensal',
       icon: Goal,
       path: '/',
       sectionId: 'objetivo-100k',
     },
     {
       label: 'Educação financeira',
-      description: 'Conceitos para entender cada simulação',
       icon: BookOpen,
       path: '/',
       sectionId: 'sobre',
@@ -163,22 +158,8 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
             className="fixed inset-x-0 top-14 md:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-white/10 bg-[#121418] shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
           >
             <div className="mx-auto max-w-285 px-4 py-5 sm:px-6">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
-                    NAVEGAÇÃO
-                  </p>
-                  <p className="mt-1 text-sm text-[#9499A3]">
-                    Acesse uma área da calculadora
-                  </p>
-                </div>
-                <span className="rounded-full bg-white/6 px-2.5 py-1 text-[10px] font-medium text-[#9499A3]">
-                  Menu
-                </span>
-              </div>
-
               <nav className="grid grid-cols-1 gap-2" aria-label="Navegação mobile">
-                {mobileLinks.map(({ label, description, icon: Icon, path, sectionId }) => (
+                {mobileLinks.map(({ label, icon: Icon, path, sectionId }) => (
                   <button
                     key={label}
                     type="button"
@@ -189,12 +170,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-[#F4F5F7]">
-                        {label}
-                      </span>
-                      <span className="mt-0.5 block truncate text-xs text-[#9499A3]">
-                        {description}
-                      </span>
+                      <span className="block text-sm font-semibold text-[#F4F5F7]">{label}</span>
                     </span>
                     <ChevronRight
                       className="h-4 w-4 shrink-0 text-[#646973] transition-transform group-hover:translate-x-0.5 group-hover:text-[#10B981]"
@@ -212,10 +188,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
                 >
                   <BarChart3 className="h-4 w-4 text-[#10B981]" aria-hidden="true" />
                   <span>
-                    <span className="block text-sm font-semibold text-[#F4F5F7]">
-                      Simular CDB
-                    </span>
-                    <span className="block text-xs text-[#9499A3]">100%, 110% ou 120% do CDI</span>
+                    <span className="block text-sm font-semibold text-[#F4F5F7]">Simular CDB</span>
                   </span>
                 </button>
 
@@ -230,10 +203,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
                 >
                   <Database className="h-4 w-4 text-[#10B981]" aria-hidden="true" />
                   <span>
-                    <span className="block text-sm font-semibold text-[#F4F5F7]">
-                      Fontes de dados
-                    </span>
-                    <span className="block text-xs text-[#9499A3]">Taxas e metodologia</span>
+                    <span className="block text-sm font-semibold text-[#F4F5F7]">Fontes de dados</span>
                   </span>
                 </button>
               </div>
