@@ -24,7 +24,7 @@ export interface RouteMetadata {
 export const SEO_ROUTES: Record<string, RouteMetadata> = {
   '/': {
     path: '/',
-    title: 'Meu Dinheiro – Quanto seu dinheiro pode render?',
+    title: 'Meu Dinheiro',
     description:
       'Compare CDB, Tesouro Selic, Poupança e LCI/LCA e descubra de forma simples quanto seu dinheiro pode render no final.',
     heading: 'Quanto seu dinheiro pode render?',
