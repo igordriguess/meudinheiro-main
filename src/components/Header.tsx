@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
 
   return (
     <header className="sticky top-0 z-40 bg-[#0A0B0D]/90 backdrop-blur-md border-b border-white/[0.07]">
-      <div className="max-w-[1140px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div className="max-w-285 mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <a
           href="/"
           onClick={(e) => {
@@ -112,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
           <button
             type="button"
             onClick={() => handleLinkClick('/cdb-100-cdi')}
-            className="hidden sm:inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-[#F4F5F7] bg-[#121418] border border-white/[0.1] rounded-lg hover:border-[#10B981]/60 transition-colors cursor-pointer whitespace-nowrap"
+            className="hidden sm:inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-[#F4F5F7] bg-[#121418] border border-white/10 rounded-lg hover:border-[#10B981]/60 transition-colors cursor-pointer whitespace-nowrap"
           >
             Simular CDB
           </button>
@@ -123,10 +123,10 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
             aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
-            className={`md:hidden min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
+            className={`md:hidden min-h-10.5 min-w-10.5 flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
               mobileMenuOpen
                 ? 'bg-[#10B981]/10 border-[#10B981]/35 text-[#10B981]'
-                : 'border-transparent text-[#9499A3] hover:text-[#F4F5F7] hover:bg-white/[0.05]'
+                : 'border-transparent text-[#9499A3] hover:text-[#F4F5F7] hover:bg-white/5'
             }`}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -145,9 +145,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
 
           <div
             id="mobile-navigation"
-            className="fixed inset-x-0 top-14 md:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-white/[0.1] bg-[#121418] shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+            className="fixed inset-x-0 top-14 md:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-white/10 bg-[#121418] shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
           >
-            <div className="mx-auto max-w-[1140px] px-4 py-5 sm:px-6">
+            <div className="mx-auto max-w-285 px-4 py-5 sm:px-6">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
@@ -157,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
                     Acesse uma área da calculadora
                   </p>
                 </div>
-                <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium text-[#9499A3]">
+                <span className="rounded-full bg-white/6 px-2.5 py-1 text-[10px] font-medium text-[#9499A3]">
                   Menu
                 </span>
               </div>
@@ -168,9 +168,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
                     key={label}
                     type="button"
                     onClick={() => handleLinkClick(path, sectionId)}
-                    className="group flex min-h-[60px] items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0A0B0D]/60 px-3.5 py-3 text-left transition-colors hover:border-[#10B981]/35 hover:bg-[#10B981]/[0.06]"
+                    className="group flex min-h-15 items-center gap-3 rounded-xl border border-white/7 bg-[#0A0B0D]/60 px-3.5 py-3 text-left transition-colors hover:border-[#10B981]/35 hover:bg-[#10B981]/6"
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-[#10B981] transition-colors group-hover:bg-[#10B981]/15">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/6 text-[#10B981] transition-colors group-hover:bg-[#10B981]/15">
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -193,7 +193,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => handleLinkClick('/cdb-100-cdi')}
-                  className="flex min-h-[48px] items-center gap-3 rounded-xl border border-[#10B981]/25 bg-[#10B981]/[0.08] px-3.5 text-left transition-colors hover:bg-[#10B981]/15"
+                  className="flex min-h-12 items-center gap-3 rounded-xl border border-[#10B981]/25 bg-[#10B981]/8 px-3.5 text-left transition-colors hover:bg-[#10B981]/15"
                 >
                   <BarChart3 className="h-4 w-4 text-[#10B981]" aria-hidden="true" />
                   <span>
@@ -207,10 +207,10 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => handleLinkClick('/fontes')}
-                  className={`flex min-h-[48px] items-center gap-3 rounded-xl border px-3.5 text-left transition-colors ${
+                  className={`flex min-h-12 items-center gap-3 rounded-xl border px-3.5 text-left transition-colors ${
                     currentPath === '/fontes'
-                      ? 'border-[#10B981]/35 bg-[#10B981]/[0.08]'
-                      : 'border-white/[0.07] bg-[#0A0B0D]/60 hover:border-white/[0.18] hover:bg-white/[0.05]'
+                      ? 'border-[#10B981]/35 bg-[#10B981]/8'
+                      : 'border-white/7 bg-[#0A0B0D]/60 hover:border-white/18 hover:bg-white/5'
                   }`}
                 >
                   <Database className="h-4 w-4 text-[#10B981]" aria-hidden="true" />

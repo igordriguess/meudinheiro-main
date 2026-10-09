@@ -190,7 +190,7 @@ export function App() {
     <div className="min-h-screen flex flex-col bg-[#0A0B0D] text-[#F4F5F7]">
       <Header currentPath={currentPath} onNavigate={navigateTo} />
 
-      <main className="flex-1 w-full max-w-[1140px] mx-auto px-4 sm:px-6 pt-8 sm:pt-12 space-y-12 sm:space-y-16">
+      <main className="flex-1 w-full max-w-285 mx-auto px-4 sm:px-6 pt-8 sm:pt-12 space-y-12 sm:space-y-16">
         {viewMode === 'SOURCES' ? (
           <div className="space-y-8 max-w-4xl mx-auto">
             <div className="space-y-3">
@@ -216,7 +216,7 @@ export function App() {
           </div>
         ) : (
           <>
-            <section id="simulador" className="max-w-[720px] mx-auto space-y-7">
+            <section id="simulador" className="max-w-180 mx-auto space-y-7">
               <div className="space-y-2.5 text-left sm:text-center">
                 {currentPath !== '/' && (
                   <div className="flex sm:justify-center">
@@ -283,7 +283,7 @@ export function App() {
             <ComparisonTable simulation={simulation} />
 
             <section className="space-y-6" aria-labelledby="analysis-heading">
-              <div className="border-t border-white/[0.08] pt-8">
+              <div className="border-t border-white/8 pt-8">
                 <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
                   ANÁLISE DA PROJEÇÃO
                 </p>
@@ -307,7 +307,7 @@ export function App() {
             </section>
 
             <section className="space-y-8" aria-labelledby="tools-heading">
-              <div className="border-t border-white/[0.08] pt-8">
+              <div className="border-t border-white/8 pt-8">
                 <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
                   FERRAMENTAS PARA DECIDIR
                 </p>
@@ -323,7 +323,7 @@ export function App() {
               </div>
 
               <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Atalhos de planejamento">
-                <div className="p-6 rounded-2xl bg-[#121418] border border-white/[0.08] flex flex-col justify-between space-y-4">
+                <div className="p-6 rounded-2xl bg-[#121418] border border-white/8 flex flex-col justify-between space-y-4">
                   <div className="space-y-1">
                     <span className="text-xs font-mono text-[#10B981]">
                       PLANEJAMENTO POR OBJETIVO
@@ -340,7 +340,7 @@ export function App() {
                     <button
                       type="button"
                       onClick={() => navigateTo('/como-chegar-aos-100-mil', 'objetivo-100k')}
-                      className="min-h-[42px] px-4 py-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                      className="min-h-10.5 px-4 py-2 rounded-xl bg-white/7 hover:bg-white/12 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
                     >
                       Chegar a R$ 100 mil
                     </button>
@@ -349,14 +349,14 @@ export function App() {
                       onClick={() =>
                         navigateTo('/quanto-preciso-investir-para-ganhar-1000', 'renda-mensal')
                       }
-                      className="min-h-[42px] px-4 py-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                      className="min-h-10.5 px-4 py-2 rounded-xl bg-white/7 hover:bg-white/12 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
                     >
                       Gerar R$ 1.000/mês
                     </button>
                   </div>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-[#121418] border border-white/[0.08] flex flex-col justify-between space-y-4">
+                <div className="p-6 rounded-2xl bg-[#121418] border border-white/8 flex flex-col justify-between space-y-4">
                   <div className="space-y-1">
                     <span className="text-xs font-mono text-[#10B981]">
                       COMPARATIVOS RÁPIDOS
@@ -373,21 +373,21 @@ export function App() {
                     <button
                       type="button"
                       onClick={() => navigateTo('/cdb-ou-poupanca', 'comparacao-direta')}
-                      className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                      className="min-h-10 px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/8 hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
                     >
                       CDB x Poupança
                     </button>
                     <button
                       type="button"
                       onClick={() => navigateTo('/cdb-ou-tesouro-selic', 'comparacao-direta')}
-                      className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                      className="min-h-10 px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/8 hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
                     >
                       CDB x Tesouro
                     </button>
                     <button
                       type="button"
                       onClick={() => navigateTo('/lci-ou-cdb', 'comparacao-direta')}
-                      className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                      className="min-h-10 px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/8 hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
                     >
                       LCI x CDB
                     </button>
@@ -446,7 +446,7 @@ export function App() {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label="Voltar ao início da página"
           title="Voltar ao início"
-          className="fixed right-4 bottom-5 sm:right-7 sm:bottom-7 z-40 min-h-[46px] min-w-[46px] flex items-center justify-center rounded-full bg-[#10B981] text-[#05100B] shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:bg-[#34D399] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4F5F7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0B0D] transition-all cursor-pointer"
+          className="fixed right-4 bottom-5 sm:right-7 sm:bottom-7 z-40 min-h-11.5 min-w-11.5 flex items-center justify-center rounded-full bg-[#10B981] text-[#05100B] shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:bg-[#34D399] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4F5F7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0B0D] transition-all cursor-pointer"
           style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
         >
           <ArrowUp className="w-5 h-5" aria-hidden="true" />
