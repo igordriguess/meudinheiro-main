@@ -12,6 +12,7 @@
     background-color: #0A0B0D;
     color: #F4F5F7;
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {

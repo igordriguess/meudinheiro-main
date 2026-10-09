@@ -3,14 +3,12 @@ import {
   GoalType,
   InvestmentProductType,
   MarketRates,
-  SimulationHistoryItem,
   TreasuryProduct,
 } from './types/finance';
 import {
   calculateGoalTimeline,
   calculateRequiredForMonthlyIncome,
   DEFAULT_FALLBACK_RATES,
-  formatBRL,
   runFullSimulation,
 } from './services/simulationEngine';
 import { fetchMarketRatesClient, fetchTreasuryProductsClient } from './services/apiClient';
@@ -25,14 +23,11 @@ import { MonthlyIncomeCalculator, PassiveIncomeByCapital } from './components/Mo
 import { CdbCalculator } from './components/CdbCalculator';
 import { ComparisonCard } from './components/ComparisonCard';
 import { ShareCardModal } from './components/ShareCardModal';
-import { LocalHistory } from './components/LocalHistory';
-import { AdSlot, PartnerOffersSection } from './components/AdSlot';
 import { EducationalSection } from './components/EducationalSection';
 import { DataSource } from './components/DataSource';
 import { Disclaimer } from './components/Disclaimer';
 import { Footer } from './components/Footer';
-
-const LOCAL_STORAGE_HISTORY_KEY = 'meu_dinheiro_history_v1';
+import { ArrowUp } from 'lucide-react';
 
 export function App() {
   const [currentPath, setCurrentPath] = useState<string>(() => {
@@ -56,40 +51,7 @@ export function App() {
 
   const [highlightKey, setHighlightKey] = useState<number>(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
-  const [historyItems, setHistoryItems] = useState<SimulationHistoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_HISTORY_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {
-      // Ignore
-    }
-    const now = Date.now();
-    return [
-      {
-        id: 'seed-1',
-        timestamp: now - 1000 * 60 * 15,
-        initialAmount: 10000,
-        monthlyContribution: 1000,
-        months: 12,
-        bestFinalAmount: 23315,
-        bestProductName: 'CDB 100% CDI',
-        goalType: 'RENDER',
-      },
-      {
-        id: 'seed-2',
-        timestamp: now - 1000 * 60 * 60 * 26,
-        initialAmount: 50000,
-        monthlyContribution: 0,
-        months: 24,
-        bestFinalAmount: 60024,
-        bestProductName: 'LCI / LCA 90% CDI',
-        goalType: 'RENDER',
-      },
-    ];
-  });
+  const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
 
   const resultSectionRef = useRef<HTMLDivElement>(null);
 
@@ -160,6 +122,16 @@ export function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollToTop(window.scrollY > 400);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const navigateTo = (path: string, sectionId?: string) => {
     const cleanPath = SEO_ROUTES[path] ? path : '/';
     if (cleanPath !== currentPath) {
@@ -206,55 +178,8 @@ export function App() {
   const handleCalculateClick = () => {
     setHighlightKey((prev) => prev + 1);
 
-    const newItem: SimulationHistoryItem = {
-      id: `${Date.now()}`,
-      timestamp: Date.now(),
-      initialAmount,
-      monthlyContribution,
-      months,
-      bestFinalAmount: simulation.bestProduct.finalAmount,
-      bestProductName: simulation.bestProduct.name,
-      goalType,
-    };
-
-    const updated = [
-      newItem,
-      ...historyItems.filter(
-        (h) =>
-          !(
-            h.initialAmount === initialAmount &&
-            h.monthlyContribution === monthlyContribution &&
-            h.months === months
-          )
-      ),
-    ].slice(0, 8);
-
-    setHistoryItems(updated);
-    try {
-      localStorage.setItem(LOCAL_STORAGE_HISTORY_KEY, JSON.stringify(updated));
-    } catch {
-      // Ignore
-    }
-
     if (resultSectionRef.current) {
       resultSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  };
-
-  const handleSelectHistoryItem = (item: SimulationHistoryItem) => {
-    setInitialAmount(item.initialAmount);
-    setMonthlyContribution(item.monthlyContribution);
-    setMonths(item.months);
-    setGoalType(item.goalType);
-    setHighlightKey((prev) => prev + 1);
-  };
-
-  const handleClearHistory = () => {
-    setHistoryItems([]);
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_HISTORY_KEY);
-    } catch {
-      // Ignore
     }
   };
 
@@ -353,133 +278,152 @@ export function App() {
                 onOpenShareModal={() => setIsShareModalOpen(true)}
               />
 
-              <LocalHistory
-                items={historyItems}
-                onSelectHistory={handleSelectHistoryItem}
-                onClearHistory={handleClearHistory}
-              />
             </div>
 
             <ComparisonTable simulation={simulation} />
 
-            <AdSlot label="Espaço publicitário" />
-
-            <PerformanceChart timeline={simulation.timeline} />
-
-            <PassiveIncomeByCapital
-              rates={rates}
-              defaultCapital={simulation.bestProduct.finalAmount}
-            />
-
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-6 rounded-2xl bg-[#121418] border border-white/[0.08] flex flex-col justify-between space-y-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-mono text-[#10B981]">
-                    PLANEJAMENTO POR OBJETIVO
-                  </span>
-                  <h3 className="text-lg font-display font-semibold text-[#F4F5F7]">
-                    Quer atingir um objetivo específico?
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#9499A3]">
-                    Descubra em quanto tempo você chega aos R$ 100 mil ou quanto precisa acumular para gerar R$ 1.000 por mês.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('/como-chegar-aos-100-mil', 'objetivo-100k')}
-                    className="min-h-[42px] px-4 py-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    Chegar a R$ 100 mil
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigateTo('/quanto-preciso-investir-para-ganhar-1000', 'renda-mensal')
-                    }
-                    className="min-h-[42px] px-4 py-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    Gerar R$ 1.000/mês
-                  </button>
-                </div>
+            <section className="space-y-6" aria-labelledby="analysis-heading">
+              <div className="border-t border-white/[0.08] pt-8">
+                <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
+                  ANÁLISE DA PROJEÇÃO
+                </p>
+                <h2
+                  id="analysis-heading"
+                  className="mt-1 text-2xl sm:text-3xl font-display font-semibold text-[#F4F5F7]"
+                >
+                  Acompanhe a evolução do seu patrimônio
+                </h2>
+                <p className="mt-1 text-sm text-[#9499A3]">
+                  Veja o crescimento ao longo do tempo e o potencial de renda mensal do valor acumulado.
+                </p>
               </div>
 
-              <div className="p-6 rounded-2xl bg-[#121418] border border-white/[0.08] flex flex-col justify-between space-y-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-mono text-[#10B981]">
-                    COMPARATIVOS RÁPIDOS
-                  </span>
-                  <h3 className="text-lg font-display font-semibold text-[#F4F5F7]">
-                    Compare investimentos lado a lado
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#9499A3]">
-                    Veja a diferença líquida direta entre duas alternativas para qualquer valor:
-                  </p>
-                </div>
+              <PerformanceChart timeline={simulation.timeline} />
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('/cdb-ou-poupanca', 'comparacao-direta')}
-                    className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    CDB x Poupança
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('/cdb-ou-tesouro-selic', 'comparacao-direta')}
-                    className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    CDB x Tesouro
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo('/lci-ou-cdb', 'comparacao-direta')}
-                    className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    LCI x CDB
-                  </button>
-                </div>
-              </div>
+              <PassiveIncomeByCapital
+                rates={rates}
+                defaultCapital={simulation.bestProduct.finalAmount}
+              />
             </section>
 
-            <GoalCalculator
-              rates={rates}
-              defaultInitial={activeRouteMeta.preset?.initialAmount ?? 20000}
-              defaultMonthly={activeRouteMeta.preset?.monthlyContribution ?? 1000}
-              defaultTarget={activeRouteMeta.preset?.targetAmount ?? 100000}
-            />
+            <section className="space-y-8" aria-labelledby="tools-heading">
+              <div className="border-t border-white/[0.08] pt-8">
+                <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
+                  FERRAMENTAS PARA DECIDIR
+                </p>
+                <h2
+                  id="tools-heading"
+                  className="mt-1 text-2xl sm:text-3xl font-display font-semibold text-[#F4F5F7]"
+                >
+                  Planeje os próximos passos
+                </h2>
+                <p className="mt-1 text-sm text-[#9499A3]">
+                  Explore metas, renda mensal e comparações com os mesmos critérios da simulação principal.
+                </p>
+              </div>
 
-            <MonthlyIncomeCalculator
-              rates={rates}
-              defaultIncome={activeRouteMeta.preset?.desiredMonthlyIncome ?? 1000}
-            />
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Atalhos de planejamento">
+                <div className="p-6 rounded-2xl bg-[#121418] border border-white/[0.08] flex flex-col justify-between space-y-4">
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono text-[#10B981]">
+                      PLANEJAMENTO POR OBJETIVO
+                    </span>
+                    <h3 className="text-lg font-display font-semibold text-[#F4F5F7]">
+                      Quer atingir um objetivo específico?
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#9499A3]">
+                      Descubra em quanto tempo você chega aos R$ 100 mil ou quanto precisa acumular para gerar R$ 1.000 por mês.
+                    </p>
+                  </div>
 
-            <CdbCalculator
-              rates={rates}
-              defaultAmount={10000}
-              defaultMonths={12}
-              defaultPercentCdi={cdbPresetPercent}
-              onNavigateRoute={(p) => navigateTo(p, 'simulador-cdb')}
-            />
+                  <div className="flex flex-wrap gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => navigateTo('/como-chegar-aos-100-mil', 'objetivo-100k')}
+                      className="min-h-[42px] px-4 py-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      Chegar a R$ 100 mil
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigateTo('/quanto-preciso-investir-para-ganhar-1000', 'renda-mensal')
+                      }
+                      className="min-h-[42px] px-4 py-2 rounded-xl bg-white/[0.07] hover:bg-white/[0.12] text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      Gerar R$ 1.000/mês
+                    </button>
+                  </div>
+                </div>
 
-            <ComparisonCard
-              rates={rates}
-              defaultProductA={compareProductA}
-              defaultProductB={compareProductB}
-              defaultAmount={10000}
-              defaultMonths={12}
-              onNavigateRoute={(p) => navigateTo(p, 'comparacao-direta')}
-            />
+                <div className="p-6 rounded-2xl bg-[#121418] border border-white/[0.08] flex flex-col justify-between space-y-4">
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono text-[#10B981]">
+                      COMPARATIVOS RÁPIDOS
+                    </span>
+                    <h3 className="text-lg font-display font-semibold text-[#F4F5F7]">
+                      Compare investimentos lado a lado
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#9499A3]">
+                      Veja a diferença líquida direta entre duas alternativas para qualquer valor:
+                    </p>
+                  </div>
 
-            <PartnerOffersSection
-              onSimulateOfferRate={(pct) => {
-                setCdbPresetPercent(pct);
-                const el = document.getElementById('simulador-cdb');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-            />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigateTo('/cdb-ou-poupanca', 'comparacao-direta')}
+                      className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      CDB x Poupança
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateTo('/cdb-ou-tesouro-selic', 'comparacao-direta')}
+                      className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      CDB x Tesouro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateTo('/lci-ou-cdb', 'comparacao-direta')}
+                      className="min-h-[40px] px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/[0.08] hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      LCI x CDB
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <GoalCalculator
+                rates={rates}
+                defaultInitial={activeRouteMeta.preset?.initialAmount ?? 20000}
+                defaultMonthly={activeRouteMeta.preset?.monthlyContribution ?? 1000}
+                defaultTarget={activeRouteMeta.preset?.targetAmount ?? 100000}
+              />
+
+              <MonthlyIncomeCalculator
+                rates={rates}
+                defaultIncome={activeRouteMeta.preset?.desiredMonthlyIncome ?? 1000}
+              />
+
+              <CdbCalculator
+                rates={rates}
+                defaultAmount={10000}
+                defaultMonths={12}
+                defaultPercentCdi={cdbPresetPercent}
+                onNavigateRoute={(p) => navigateTo(p, 'simulador-cdb')}
+              />
+
+              <ComparisonCard
+                rates={rates}
+                defaultProductA={compareProductA}
+                defaultProductB={compareProductB}
+                defaultAmount={10000}
+                defaultMonths={12}
+                onNavigateRoute={(p) => navigateTo(p, 'comparacao-direta')}
+              />
+            </section>
 
             <EducationalSection rates={rates} />
 
@@ -495,6 +439,19 @@ export function App() {
       </main>
 
       <Footer onNavigate={navigateTo} />
+
+      {showScrollToTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Voltar ao início da página"
+          title="Voltar ao início"
+          className="fixed right-4 bottom-5 sm:right-7 sm:bottom-7 z-40 min-h-[46px] min-w-[46px] flex items-center justify-center rounded-full bg-[#10B981] text-[#05100B] shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:bg-[#34D399] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F4F5F7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0B0D] transition-all cursor-pointer"
+          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <ArrowUp className="w-5 h-5" aria-hidden="true" />
+        </button>
+      )}
 
       <ShareCardModal
         isOpen={isShareModalOpen}
