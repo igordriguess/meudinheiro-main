@@ -3,7 +3,7 @@ import { DEFAULT_FALLBACK_RATES } from './simulationEngine';
 
 export async function fetchMarketRatesClient(): Promise<MarketRates> {
   try {
-    const res = await fetch('/api/rates');
+    const res = await fetch('/api/rates', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch rates');
     const data = (await res.json()) as MarketRates;
     if (typeof data?.selic === 'number' && typeof data?.cdi === 'number') {
@@ -21,7 +21,7 @@ export async function fetchTreasuryProductsClient(): Promise<{
   products: TreasuryProduct[];
 }> {
   try {
-    const res = await fetch('/api/treasury');
+    const res = await fetch('/api/treasury', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch treasury');
     return await res.json();
   } catch {

@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Database,
   Goal,
+  WalletCards,
   Menu,
   Scale,
   X,
@@ -37,6 +38,13 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
       icon: Scale,
       path: '/',
       sectionId: 'comparar',
+    },
+    {
+      label: 'Simular pelo patrimônio',
+      description: 'Estime sua renda mensal com o valor investido',
+      icon: WalletCards,
+      path: '/',
+      sectionId: 'simule-pelo-patrimonio',
     },
     {
       label: 'Planejar objetivos',
@@ -82,6 +90,13 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
             className="hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
           >
             Comparar
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLinkClick('/', 'simule-pelo-patrimonio')}
+            className="hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            Patrimônio
           </button>
           <button
             type="button"

@@ -57,14 +57,30 @@ export function App() {
 
   useEffect(() => {
     let mounted = true;
-    fetchMarketRatesClient().then((data) => {
-      if (mounted) setRates(data);
-    });
-    fetchTreasuryProductsClient().then((data) => {
-      if (mounted && data.products) setTreasuryProducts(data.products);
-    });
+    const refreshMarketData = async () => {
+      const [marketRates, treasuryData] = await Promise.all([
+        fetchMarketRatesClient(),
+        fetchTreasuryProductsClient(),
+      ]);
+      if (!mounted) return;
+      setRates(marketRates);
+      if (treasuryData.products) setTreasuryProducts(treasuryData.products);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshMarketData();
+      }
+    };
+
+    void refreshMarketData();
+    const refreshInterval = window.setInterval(refreshMarketData, 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       mounted = false;
+      window.clearInterval(refreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 

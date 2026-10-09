@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 
 let cachedRates: MarketRates | null = null;
 let lastFetchTimestamp = 0;
-const CACHE_TTL_MS = 1000 * 60 * 30;
+const CACHE_TTL_MS = 1000 * 60 * 5;
 
 async function fetchBcbSeriesLastValue(seriesCode: number): Promise<{ valor: number; data: string } | null> {
   try {
@@ -92,6 +92,7 @@ async function startServer() {
   app.get('/api/rates', async (_req, res) => {
     try {
       const rates = await getMarketRates();
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
       res.json(rates);
     } catch {
       res.status(200).json(DEFAULT_FALLBACK_RATES);
@@ -101,6 +102,7 @@ async function startServer() {
   app.get('/api/treasury', async (_req, res) => {
     const rates = await getMarketRates();
     const updatedAt = rates.updatedAt;
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
 
     const products: TreasuryProduct[] = [
       {
