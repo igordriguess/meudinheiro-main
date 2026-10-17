@@ -8,6 +8,7 @@ interface GoalCalculatorProps {
   defaultInitial?: number;
   defaultMonthly?: number;
   defaultTarget?: number;
+  hideTitle?: boolean;
 }
 
 export const GoalCalculator: React.FC<GoalCalculatorProps> = ({
@@ -15,6 +16,7 @@ export const GoalCalculator: React.FC<GoalCalculatorProps> = ({
   defaultInitial = 20000,
   defaultMonthly = 1000,
   defaultTarget = 100000,
+  hideTitle = false,
 }) => {
   const [initialAmount, setInitialAmount] = useState(defaultInitial);
   const [monthlyContribution, setMonthlyContribution] = useState(defaultMonthly);
@@ -34,8 +36,9 @@ export const GoalCalculator: React.FC<GoalCalculatorProps> = ({
   return (
     <section
       id="objetivo-100k"
-      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-6 sm:p-8 space-y-7"
+      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-5 sm:p-8 space-y-7"
     >
+      {!hideTitle && (
       <div className="space-y-1.5">
         <p className="text-xs font-mono text-[#10B981]">PLANEJADOR DE META</p>
         <h2 className="text-2xl sm:text-3xl font-display font-semibold text-[#F4F5F7] tracking-tight">
@@ -45,8 +48,9 @@ export const GoalCalculator: React.FC<GoalCalculatorProps> = ({
           Veja em quanto tempo você alcança seu objetivo e como a rentabilidade reduz a espera.
         </p>
       </div>
+      )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MoneyInput
           id="goal-initial"
           label="Tenho hoje:"
@@ -98,7 +102,7 @@ export const GoalCalculator: React.FC<GoalCalculatorProps> = ({
         {results.map((item) => (
           <div
             key={item.product}
-            className={`p-4 rounded-xl border flex flex-col justify-between ${
+            className={`min-w-0 p-4 rounded-xl border flex flex-col justify-between ${
               item.isFastest
                 ? 'bg-[#0A0B0D] border-[#10B981]/50'
                 : 'bg-[#0A0B0D] border-white/[0.06]'
@@ -116,15 +120,15 @@ export const GoalCalculator: React.FC<GoalCalculatorProps> = ({
             </div>
 
             <div className="mt-4 pt-3 border-t border-white/[0.06] space-y-1 text-xs text-[#9499A3]">
-              <div className="flex justify-between">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 <span>Total desembolsado:</span>
-                <span className="font-mono text-[#F4F5F7] tabular-nums">
+                <span className="ml-auto text-right wrap-anywhere font-mono text-[#F4F5F7] tabular-nums">
                   {formatBRL(Math.round(item.totalInvested))}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                 <span>Juros líquidos:</span>
-                <span className="font-mono text-[#10B981] tabular-nums">
+                <span className="ml-auto text-right wrap-anywhere font-mono text-[#10B981] tabular-nums">
                   +{formatBRL(Math.round(item.netReturn))}
                 </span>
               </div>

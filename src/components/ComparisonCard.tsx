@@ -7,6 +7,7 @@ import {
   simulateSingleProduct,
 } from '../services/simulationEngine';
 import { MoneyInput } from './MoneyInput';
+import { fitAmount } from '../services/amountFit';
 import { PeriodSelector } from './PeriodSelector';
 
 interface ComparisonCardProps {
@@ -16,6 +17,7 @@ interface ComparisonCardProps {
   defaultAmount?: number;
   defaultMonths?: number;
   onNavigateRoute?: (path: string) => void;
+  hideTitle?: boolean;
 }
 
 const PRODUCT_OPTIONS: Array<{ id: InvestmentProductType; label: string }> = [
@@ -32,6 +34,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
   defaultAmount = 10000,
   defaultMonths = 12,
   onNavigateRoute,
+  hideTitle = false,
 }) => {
   const [productA, setProductA] = useState<InvestmentProductType>(defaultProductA);
   const [productB, setProductB] = useState<InvestmentProductType>(defaultProductB);
@@ -86,9 +89,10 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
   return (
     <section
       id="comparacao-direta"
-      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-6 sm:p-8 space-y-7 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-5 sm:p-8 space-y-7 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
     >
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        {!hideTitle && (
         <div className="space-y-1">
           <p className="text-xs font-mono text-[#10B981]">COMPARAÇÃO LADO A LADO</p>
           <h2 className="text-2xl sm:text-3xl font-display font-semibold text-[#F4F5F7] tracking-tight">
@@ -98,6 +102,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
             Escolha duas alternativas e compare a diferença líquida exata em reais.
           </p>
         </div>
+        )}
 
         {onNavigateRoute && (
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#9499A3]">
@@ -260,13 +265,13 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
           return (
             <div
               key={`${sim.product}-${index}`}
-              className={`p-5 rounded-xl border space-y-4 ${
+              className={`min-w-0 p-5 rounded-xl border space-y-4 ${
                 isHigher
                   ? 'bg-[#0A0B0D] border-[#10B981]/60'
                   : 'bg-[#0A0B0D] border-white/[0.07]'
               }`}
             >
-              <div className="flex items-baseline justify-between gap-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
                 <h3 className="flex items-center gap-2 text-base font-semibold text-[#F4F5F7]">
                   {isHigher ? <Trophy className="h-4 w-4 text-[#10B981]" /> : <Minus className="h-4 w-4 text-[#646973]" />}
                   {sim.name}
@@ -281,7 +286,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
                   Valor final líquido em {formatMonthsHuman(months)}:
                 </span>
                 <p
-                  className={`text-2xl sm:text-3xl font-mono font-semibold tabular-nums mt-1 ${
+                  className={`${fitAmount(formatBRL(Math.round(sim.finalAmount)), 'lg')} font-mono font-semibold tabular-nums mt-1 ${
                     isHigher ? 'text-[#10B981]' : 'text-[#F4F5F7]'
                   }`}
                 >
@@ -290,18 +295,28 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
               </div>
 
               <div className="pt-3 border-t border-white/[0.06] space-y-1.5 text-xs">
-                <div className="flex justify-between">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
                   <span className="text-[#9499A3]">Rendimento líquido:</span>
-                  <span className="font-mono text-[#10B981] tabular-nums">
+                  <span className="ml-auto text-right wrap-anywhere font-mono text-[#10B981] tabular-nums">
                     +{formatBRL(Math.round(sim.netReturn))}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#9499A3]">Imposto descontado:</span>
-                  <span className="font-mono text-[#9499A3] tabular-nums">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                  <span className="text-[#9499A3]">
+                    Imposto de Renda{sim.isTaxExempt ? '' : ` (${sim.taxRatePercent.toFixed(1).replace('.', ',')}%)`}:
+                  </span>
+                  <span className="ml-auto text-right wrap-anywhere font-mono text-[#9499A3] tabular-nums">
                     {sim.isTaxExempt ? 'Isento' : `-${formatBRL(Math.round(sim.taxes))}`}
                   </span>
                 </div>
+                {sim.feeAmount > 0 && (
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                    <span className="text-[#9499A3]">Taxa de custódia B3:</span>
+                    <span className="ml-auto text-right wrap-anywhere font-mono text-[#9499A3] tabular-nums">
+                      -{formatBRL(Math.round(sim.feeAmount))}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -312,7 +327,7 @@ export const ComparisonCard: React.FC<ComparisonCardProps> = ({
         <span className="text-sm text-[#9499A3]">
           Diferença líquida ao final de {formatMonthsHuman(months)}:
         </span>
-        <span className="text-lg font-mono font-semibold text-[#10B981] tabular-nums">
+        <span className="text-base sm:text-lg font-mono font-semibold text-[#10B981] tabular-nums wrap-anywhere sm:text-right">
           {isTie
             ? 'R$ 0 (Mesma opção selecionada)'
             : `+${formatBRL(Math.round(diff))} a mais em ${winner.name}`}

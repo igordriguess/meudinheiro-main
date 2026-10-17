@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MarketRates } from '../types/finance';
 import { calculateRequiredForMonthlyIncome, formatBRL, formatPercent } from '../services/simulationEngine';
 import { MoneyInput } from './MoneyInput';
+import { fitAmount } from '../services/amountFit';
 
 interface MonthlyIncomeCalculatorProps {
   rates: MarketRates;
@@ -23,7 +24,7 @@ export const MonthlyIncomeCalculator: React.FC<MonthlyIncomeCalculatorProps> = (
     <>
       <section
         id="renda-mensal"
-        className="bg-[#121418] border border-white/8 rounded-2xl p-6 sm:p-8 space-y-7"
+        className="bg-[#121418] border border-white/8 rounded-2xl p-5 sm:p-8 space-y-7"
       >
       <div className="space-y-1.5">
         <p className="text-xs font-mono text-[#10B981]">SIMULADOR DE RENDA PASSIVA</p>
@@ -50,7 +51,7 @@ export const MonthlyIncomeCalculator: React.FC<MonthlyIncomeCalculatorProps> = (
         {results.map((item) => (
           <div
             key={item.product}
-            className={`p-5 rounded-xl border flex flex-col justify-between ${
+            className={`min-w-0 p-5 rounded-xl border flex flex-col justify-between ${
               item.isLowestCapital
                 ? 'bg-[#0A0B0D] border-[#10B981]/50'
                 : 'bg-[#0A0B0D] border-white/[0.07]'
@@ -62,7 +63,7 @@ export const MonthlyIncomeCalculator: React.FC<MonthlyIncomeCalculatorProps> = (
               <div className="pt-2">
                 <span className="text-xs text-[#646973] block">Patrimônio necessário:</span>
                 <p
-                  className={`text-2xl font-mono font-semibold tabular-nums mt-0.5 ${
+                  className={`${fitAmount(formatBRL(Math.round(item.requiredCapital)), 'md')} font-mono font-semibold tabular-nums mt-0.5 ${
                     item.isLowestCapital ? 'text-[#10B981]' : 'text-[#F4F5F7]'
                   }`}
                 >
@@ -71,9 +72,9 @@ export const MonthlyIncomeCalculator: React.FC<MonthlyIncomeCalculatorProps> = (
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-white/6 flex items-center justify-between text-xs text-[#9499A3]">
+            <div className="mt-4 pt-3 border-t border-white/6 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-xs text-[#9499A3]">
               <span>Taxa líquida mensal</span>
-              <span className="font-mono text-[#F4F5F7] tabular-nums">
+              <span className="ml-auto font-mono text-[#F4F5F7] tabular-nums whitespace-nowrap">
                 {formatPercent(item.monthlyNetRatePercent, 2)} a.m.
               </span>
             </div>
@@ -116,7 +117,7 @@ export const PassiveIncomeByCapital: React.FC<PassiveIncomeByCapitalProps> = ({
   return (
     <section
       id="simule-pelo-patrimonio"
-      className="bg-[#121418] border border-white/8 rounded-2xl p-6 sm:p-8 space-y-7"
+      className="bg-[#121418] border border-white/8 rounded-2xl p-5 sm:p-8 space-y-7"
     >
       <div className="space-y-1.5">
         <p className="text-xs font-mono text-[#38BDF8]">SIMULE PELO PATRIMÔNIO</p>
@@ -146,36 +147,30 @@ export const PassiveIncomeByCapital: React.FC<PassiveIncomeByCapitalProps> = ({
             <article
               key={`income-${item.product}`}
               aria-label={`${item.name}${isBestOption ? ', opção mais vantajosa' : ''}`}
-              className={`p-5 rounded-xl border flex flex-col justify-between ${
+              className={`min-w-0 p-5 rounded-xl border flex flex-col justify-between ${
                 isBestOption
                   ? 'bg-[#121418] border-[#38BDF8]/60'
                   : 'bg-[#0A0B0D] border-white/[0.07]'
               }`}
             >
               <div className="space-y-2">
-                {isBestOption ? (
+                {isBestOption && (
                   <p className="text-xs font-medium text-[#38BDF8]">
                     Maior renda mensal estimada
                   </p>
-                ) : (
-                  <span className="text-xs text-[#9499A3] block">{item.rateLabel}</span>
                 )}
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="text-base font-semibold text-[#F4F5F7]">{item.name}</h3>
-                  <span className="text-xs font-mono text-[#9499A3] tabular-nums">
-                    {item.rateLabel}
-                  </span>
-                </div>
+                <span className="text-xs text-[#9499A3] block">{item.rateLabel}</span>
+                <h3 className="text-base font-semibold text-[#F4F5F7]">{item.name}</h3>
               </div>
               <div className="pt-3">
                 <span className="text-xs text-[#646973] block">Renda mensal líquida estimada:</span>
-                <p className="text-2xl font-mono font-semibold tabular-nums mt-0.5 text-[#38BDF8]">
+                <p className={`${fitAmount(formatBRL(Math.round(estimatedMonthlyIncome)), 'md')} font-mono font-semibold tabular-nums mt-0.5 text-[#38BDF8]`}>
                   {formatBRL(Math.round(estimatedMonthlyIncome))}
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/6 flex items-center justify-between text-xs text-[#9499A3]">
+              <div className="mt-4 pt-3 border-t border-white/6 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-xs text-[#9499A3]">
                 <span>Taxa líquida mensal</span>
-                <span className="font-mono text-[#F4F5F7] tabular-nums">
+                <span className="ml-auto font-mono text-[#F4F5F7] tabular-nums whitespace-nowrap">
                   {formatPercent(item.monthlyNetRatePercent, 2)} a.m.
                 </span>
               </div>

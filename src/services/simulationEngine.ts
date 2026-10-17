@@ -9,12 +9,13 @@ import {
 } from '../types/finance';
 
 export const DEFAULT_FALLBACK_RATES: MarketRates = {
-  selic: 11.25,
-  cdi: 11.15,
-  ipca: 4.42,
-  poupancaAnnual: 7.18,
-  trMonthly: 0.08,
-  updatedAt: '06/10/2026',
+  selic: 13.75,
+  selicOver: 13.65,
+  cdi: 13.65,
+  ipca: 4.58,
+  poupancaAnnual: 8.18,
+  trMonthly: 0.157,
+  updatedAt: '16/10/2026',
   source: 'Banco Central do Brasil (SGS) / Tesouro Nacional',
   isLiveBcb: false,
   available: true,
@@ -89,7 +90,7 @@ export function simulateSingleProduct(params: {
   } else if (product === 'TESOURO_SELIC') {
     name = 'Tesouro Selic';
     subtitle = 'Título público federal pós-fixado';
-    annualRateEffective = rates.selic;
+    annualRateEffective = rates.selicOver ?? rates.selic;
     rateLabel = `100% da Selic (${annualRateEffective.toFixed(2).replace('.', ',')}% a.a.)`;
     isTaxExempt = false;
     annualCustodyFeePercent = 0.2;
@@ -105,29 +106,54 @@ export function simulateSingleProduct(params: {
   const totalContributions = safeMonthly * safeMonths;
   const totalInvested = safeInitial + totalContributions;
 
-  const initialGrossFinal = safeInitial * Math.pow(1 + monthlyRate, safeMonths);
-
-  let contributionsGrossFinal = 0;
+  // Cada aporte é uma "parcela" com prazo próprio: o IR regressivo depende de quanto
+  // tempo aquele dinheiro ficou aplicado (aporte do mês m rende safeMonths - m meses).
+  const tranches: Array<{ amount: number; months: number }> = [
+    { amount: safeInitial, months: safeMonths },
+  ];
   for (let m = 1; m <= safeMonths; m++) {
-    const monthsInvested = safeMonths - m;
-    const trancheFinal = safeMonthly * Math.pow(1 + monthlyRate, monthsInvested);
-    contributionsGrossFinal += trancheFinal;
+    tranches.push({ amount: safeMonthly, months: safeMonths - m });
   }
+  const trancheGross = tranches.map(
+    (t) => t.amount * (Math.pow(1 + monthlyRate, t.months) - 1)
+  );
 
-  const rawGrossFinal = initialGrossFinal + contributionsGrossFinal;
-  const grossReturn = Math.max(0, rawGrossFinal - totalInvested);
+  const grossReturn = Math.max(
+    0,
+    trancheGross.reduce((sum, value) => sum + value, 0)
+  );
+  const rawGrossFinal = totalInvested + grossReturn;
 
   let feeAmount = 0;
   if (annualCustodyFeePercent > 0) {
     const avgBalance = (safeInitial + rawGrossFinal) / 2;
     const taxableBalance = Math.max(0, avgBalance - 10000);
-    feeAmount = taxableBalance * (annualCustodyFeePercent / 100) * (safeMonths / 12);
+    feeAmount = Math.min(
+      grossReturn,
+      taxableBalance * (annualCustodyFeePercent / 100) * (safeMonths / 12)
+    );
   }
 
   const adjustedGrossReturn = Math.max(0, grossReturn - feeAmount);
-  const nominalIrRate = isTaxExempt ? 0 : getRegressiveIrRate(safeMonths);
 
-  const taxes = isTaxExempt ? 0 : adjustedGrossReturn * (nominalIrRate / 100);
+  // A taxa de custódia é rateada entre as parcelas na proporção do rendimento de cada uma.
+  const taxes = isTaxExempt
+    ? 0
+    : tranches.reduce((sum, tranche, index) => {
+        const gross = trancheGross[index];
+        if (gross <= 0) return sum;
+        const feeShare = grossReturn > 0 ? feeAmount * (gross / grossReturn) : 0;
+        const taxableGain = Math.max(0, gross - feeShare);
+        return sum + taxableGain * (getRegressiveIrRate(tranche.months) / 100);
+      }, 0);
+
+  // Alíquota efetiva (média ponderada das parcelas) para exibição.
+  const nominalIrRate = isTaxExempt
+    ? 0
+    : adjustedGrossReturn > 0
+      ? (taxes / adjustedGrossReturn) * 100
+      : getRegressiveIrRate(safeMonths);
+
   const netReturn = Math.max(0, adjustedGrossReturn - taxes);
   const finalAmount = totalInvested + netReturn;
 
@@ -318,6 +344,8 @@ export function formatMonthsHuman(months: number): string {
   return `${yearStr} e ${monthStr}`;
 }
 
+export const MAX_GOAL_MONTHS = 600;
+
 export function calculateGoalTimeline(params: {
   initialAmount: number;
   monthlyContribution: number;
@@ -325,6 +353,7 @@ export function calculateGoalTimeline(params: {
   rates: MarketRates;
   cdbPercentCdi?: number;
   lciPercentCdi?: number;
+  products?: InvestmentProductType[];
 }): GoalReachProductResult[] {
   const {
     initialAmount,
@@ -333,10 +362,10 @@ export function calculateGoalTimeline(params: {
     rates,
     cdbPercentCdi = 100,
     lciPercentCdi = 90,
+    products = ['CDB', 'LCI_LCA', 'TESOURO_SELIC', 'POUPANCA'],
   } = params;
 
-  const products: InvestmentProductType[] = ['CDB', 'LCI_LCA', 'TESOURO_SELIC', 'POUPANCA'];
-  const maxMonths = 600;
+  const maxMonths = MAX_GOAL_MONTHS;
 
   const results: GoalReachProductResult[] = products.map((product) => {
     if (initialAmount >= targetAmount) {

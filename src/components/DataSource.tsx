@@ -1,6 +1,7 @@
 import React from 'react';
 import { MarketRates, TreasuryProduct } from '../types/finance';
 import { formatBRL, formatPercent } from '../services/simulationEngine';
+import { describeRatesStatus } from '../services/ratesStatus';
 
 interface DataSourceProps {
   rates: MarketRates;
@@ -35,7 +36,7 @@ export const DataSource: React.FC<DataSourceProps> = ({
             Fontes dos dados e taxas em vigor
           </h2>
           <p className="text-xs sm:text-sm text-[#9499A3]">
-            Dados atualizados em {rates.updatedAt} · Fonte: {rates.source}
+            {describeRatesStatus(rates)}
           </p>
         </div>
 
@@ -67,7 +68,7 @@ export const DataSource: React.FC<DataSourceProps> = ({
             {formatPercent(rates.cdi)} a.a.
           </span>
           <span className="text-[11px] text-[#646973] mt-1 block">
-            Base p/ CDB e LCI/LCA
+            Base p/ CDB e LCI/LCA (SGS 4389)
           </span>
         </div>
 
@@ -131,10 +132,16 @@ export const DataSource: React.FC<DataSourceProps> = ({
               , aplicando sobre o montante inicial e cada aporte mensal.
             </li>
             <li>
-              <strong className="text-[#F4F5F7]">Tabela Regressiva de Imposto de Renda:</strong> Aplicada exclusivamente sobre os rendimentos de CDB e Tesouro Direto: 22,5% (até 180 dias), 20,0% (181 a 360 dias), 17,5% (361 a 720 dias) e 15,0% (acima de 720 dias).
+              <strong className="text-[#F4F5F7]">Tabela Regressiva de Imposto de Renda:</strong> Aplicada exclusivamente sobre os rendimentos de CDB e Tesouro Direto: 22,5% (até 180 dias), 20,0% (181 a 360 dias), 17,5% (361 a 720 dias) e 15,0% (acima de 720 dias). Cada aporte mensal tem sua própria alíquota, conforme o tempo em que ficou aplicado; por isso a alíquota exibida é a média efetiva da simulação.
             </li>
             <li>
               <strong className="text-[#F4F5F7]">Isenções Legais:</strong> Poupança e LCI/LCA para Pessoa Física possuem alíquota zero de Imposto de Renda sobre os rendimentos.
+            </li>
+            <li>
+              <strong className="text-[#F4F5F7]">Tesouro Selic:</strong> Rende a Selic efetiva (SGS 1178), com taxa de custódia da B3 de 0,20% a.a. sobre o valor que excede R$ 10.000, descontada antes do Imposto de Renda.
+            </li>
+            <li>
+              <strong className="text-[#F4F5F7]">Atualização das Taxas:</strong> Consultamos o Banco Central a cada 5 minutos: Meta Selic (SGS 432), Selic efetiva (SGS 1178), CDI (SGS 4389), IPCA 12 meses (SGS 13522) e TR (SGS 226). A data exibida é a do último CDI publicado; se a consulta falhar, usamos os últimos dados obtidos ou taxas de referência, e isso é indicado na tela.
             </li>
             <li>
               <strong className="text-[#F4F5F7]">Endpoints de Dados:</strong> A aplicação expõe{' '}

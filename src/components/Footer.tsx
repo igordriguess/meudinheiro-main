@@ -1,18 +1,19 @@
 import React from 'react';
+import { APP_PAGES } from '../services/navigation';
 
 interface FooterProps {
-  onNavigate: (path: string, sectionId?: string) => void;
+  onNavigate: (path: string) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
-  const handleNav = (e: React.MouseEvent, path: string, sectionId?: string) => {
+  const handleNav = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
-    onNavigate(path, sectionId);
+    onNavigate(path);
   };
 
   return (
     <footer className="border-t border-white/[0.07] bg-[#0A0B0D] mt-16 py-12">
-      <div className="max-w-[1140px] mx-auto px-4 sm:px-6 space-y-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-2.5">
             <span className="font-display font-semibold text-lg text-[#F4F5F7] tracking-tight block">
@@ -113,45 +114,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
           <div className="space-y-2.5">
             <h4 className="text-xs font-semibold text-[#F4F5F7] tracking-wide">
-              Calculadoras de objetivos
+              Ferramentas
             </h4>
             <ul className="space-y-2 text-xs text-[#9499A3]">
-              <li>
-                <a
-                  href="/como-chegar-aos-100-mil"
-                  onClick={(e) => handleNav(e, '/como-chegar-aos-100-mil')}
-                  className="hover:text-[#10B981] transition-colors"
-                >
-                  Como chegar aos R$ 100 mil
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/quanto-preciso-investir-para-ganhar-1000"
-                  onClick={(e) => handleNav(e, '/quanto-preciso-investir-para-ganhar-1000')}
-                  className="hover:text-[#10B981] transition-colors"
-                >
-                  Gerar R$ 1.000/mês de renda
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/cdb-100-cdi"
-                  onClick={(e) => handleNav(e, '/cdb-100-cdi')}
-                  className="hover:text-[#10B981] transition-colors"
-                >
-                  Simulador CDB (100%, 110%, 120% CDI)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/fontes"
-                  onClick={(e) => handleNav(e, '/fontes')}
-                  className="hover:text-[#10B981] transition-colors"
-                >
-                  Fontes de dados e metodologia
-                </a>
-              </li>
+              {APP_PAGES.map(({ path, label }) => (
+                <li key={path}>
+                  <a
+                    href={path}
+                    onClick={(e) => handleNav(e, path)}
+                    className="hover:text-[#10B981] transition-colors"
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

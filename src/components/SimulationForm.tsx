@@ -43,9 +43,11 @@ export const SimulationForm: React.FC<SimulationFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-5 sm:p-7 space-y-6"
+      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-5 sm:p-8 space-y-6"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <GoalSelector value={goalType} onChange={onGoalTypeChange} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-6 border-t border-white/[0.06]">
         <MoneyInput
           id="initial-amount"
           label="Quanto você tem hoje?"
@@ -64,39 +66,39 @@ export const SimulationForm: React.FC<SimulationFormProps> = ({
         />
       </div>
 
-      <PeriodSelector valueMonths={months} onChange={onMonthsChange} />
+      <div className="pt-6 border-t border-white/[0.06]">
+        {goalType === 'RENDER' && <PeriodSelector valueMonths={months} onChange={onMonthsChange} />}
 
-      <GoalSelector value={goalType} onChange={onGoalTypeChange} />
+        {goalType === 'TARGET_AMOUNT' && (
+          <div className="sm:max-w-[calc(50%-0.625rem)]">
+            <MoneyInput
+              id="target-amount"
+              label="Quero chegar a:"
+              value={targetAmount}
+              onChange={onTargetAmountChange}
+              quickAmounts={[50000, 100000, 300000, 1000000]}
+            />
+          </div>
+        )}
 
-      {goalType === 'TARGET_AMOUNT' && (
-        <div className="pt-2 border-t border-white/[0.06]">
-          <MoneyInput
-            id="target-amount"
-            label="Quero chegar a:"
-            value={targetAmount}
-            onChange={onTargetAmountChange}
-            quickAmounts={[50000, 100000, 300000, 1000000]}
-          />
-        </div>
-      )}
+        {goalType === 'MONTHLY_INCOME' && (
+          <div className="sm:max-w-[calc(50%-0.625rem)]">
+            <MoneyInput
+              id="desired-monthly-income"
+              label="Quero gerar de renda:"
+              value={desiredMonthlyIncome}
+              onChange={onDesiredMonthlyIncomeChange}
+              quickAmounts={[500, 1000, 3000, 5000]}
+              suffix="/mês"
+            />
+          </div>
+        )}
+      </div>
 
-      {goalType === 'MONTHLY_INCOME' && (
-        <div className="pt-2 border-t border-white/[0.06]">
-          <MoneyInput
-            id="desired-monthly-income"
-            label="Quero gerar aproximadamente:"
-            value={desiredMonthlyIncome}
-            onChange={onDesiredMonthlyIncomeChange}
-            quickAmounts={[500, 1000, 3000, 5000]}
-            suffix="/mês"
-          />
-        </div>
-      )}
-
-      <div className="pt-1">
+      <div className="pt-1 flex justify-end">
         <button
           type="submit"
-          className="w-full min-h-[52px] py-3.5 px-6 rounded-xl bg-[#10B981] hover:bg-[#34D399] active:scale-[0.99] text-[#05100B] font-semibold text-base tracking-tight transition-all duration-150 cursor-pointer whitespace-nowrap"
+          className="w-full lg:w-auto lg:min-w-64 min-h-[52px] py-3.5 px-8 rounded-xl bg-[#10B981] hover:bg-[#34D399] active:scale-[0.99] text-[#05100B] font-semibold text-base tracking-tight transition-all duration-150 cursor-pointer whitespace-nowrap"
         >
           Calcular
         </button>

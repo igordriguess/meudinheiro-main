@@ -75,14 +75,14 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ simulation }) 
       </div>
 
       {viewMode === 'TABLE' && (
-        <div className="hidden sm:block bg-[#121418] border border-white/[0.08] rounded-2xl overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="hidden sm:block bg-[#121418] border border-white/[0.08] rounded-2xl overflow-x-auto">
+          <table className="w-full min-w-170 text-left border-collapse">
             <thead>
               <tr className="border-b border-white/[0.07] text-xs text-[#9499A3]">
                 <th className="py-4 px-5 font-medium">Alternativa</th>
                 <th className="py-4 px-5 font-medium">Taxa considerada</th>
                 <th className="py-4 px-5 font-medium text-right">Você colocou</th>
-                <th className="py-4 px-5 font-medium text-right">Imposto (IR)</th>
+                <th className="py-4 px-5 font-medium text-right">IR e custódia</th>
                 <th className="py-4 px-5 font-medium text-right">Ganho líquido</th>
                 <th className="py-4 px-5 font-medium text-right">Valor final</th>
               </tr>
@@ -104,16 +104,18 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ simulation }) 
                   <td className="py-4 px-5 font-mono text-xs text-[#9499A3] tabular-nums">
                     {item.rateLabel}
                   </td>
-                  <td className="py-4 px-5 font-mono text-right text-[#F4F5F7] tabular-nums">
+                  <td className="py-4 px-5 font-mono text-right whitespace-nowrap text-[#F4F5F7] tabular-nums">
                     {formatBRL(Math.round(item.totalInvested))}
                   </td>
-                  <td className="py-4 px-5 font-mono text-right text-[#9499A3] tabular-nums">
-                    {item.isTaxExempt ? 'Isento' : `-${formatBRL(Math.round(item.taxes))}`}
+                  <td className="py-4 px-5 font-mono text-right whitespace-nowrap text-[#9499A3] tabular-nums">
+                    {item.isTaxExempt && item.feeAmount === 0
+                      ? 'Isento'
+                      : `-${formatBRL(Math.round(item.taxes + item.feeAmount))}`}
                   </td>
-                  <td className="py-4 px-5 font-mono text-right text-[#10B981] font-medium tabular-nums">
+                  <td className="py-4 px-5 font-mono text-right whitespace-nowrap text-[#10B981] font-medium tabular-nums">
                     +{formatBRL(Math.round(item.netReturn))}
                   </td>
-                  <td className="py-4 px-5 font-mono text-right font-semibold text-[#F4F5F7] tabular-nums">
+                  <td className="py-4 px-5 font-mono text-right whitespace-nowrap font-semibold text-[#F4F5F7] tabular-nums">
                     {formatBRL(Math.round(item.finalAmount))}
                   </td>
                 </tr>

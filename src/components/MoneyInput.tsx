@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { formatBRL } from '../services/simulationEngine';
 
+export const MAX_MONEY_VALUE = 999_000_000;
+
+const formatInteger = (value: number) =>
+  new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(value);
+
 interface MoneyInputProps {
   id: string;
   label: string;
@@ -20,26 +25,28 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({
   quickAmounts,
   suffix,
 }) => {
-  const [displayValue, setDisplayValue] = useState<string>(() =>
-    new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(value)
-  );
+  const [displayValue, setDisplayValue] = useState<string>(() => formatInteger(value));
   const [isFocused, setIsFocused] = useState(false);
+  const [hitMax, setHitMax] = useState(false);
 
   useEffect(() => {
     if (!isFocused) {
-      setDisplayValue(new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(value));
+      setDisplayValue(formatInteger(value));
     }
   }, [value, isFocused]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawDigits = e.target.value.replace(/\D/g, '');
     if (!rawDigits) {
+      setHitMax(false);
       setDisplayValue('0');
       onChange(0);
       return;
     }
-    const numeric = Math.min(100000000, parseInt(rawDigits, 10));
-    setDisplayValue(new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(numeric));
+    const parsed = parseInt(rawDigits, 10);
+    const numeric = Math.min(MAX_MONEY_VALUE, parsed);
+    setHitMax(parsed > MAX_MONEY_VALUE);
+    setDisplayValue(formatInteger(numeric));
     onChange(numeric);
   };
 
@@ -59,7 +66,7 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({
             : 'border-white/[0.09] hover:border-white/[0.18]'
         }`}
       >
-        <span className="pl-4 pr-2 text-lg sm:text-xl font-mono text-[#9499A3] select-none">
+        <span className="shrink-0 pl-4 pr-2 text-lg sm:text-xl font-mono text-[#9499A3] select-none">
           R$
         </span>
         <input
@@ -70,8 +77,10 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           onChange={handleInputChange}
-          aria-describedby={helperText ? `${id}-helper` : undefined}
-          className="w-full py-3.5 pr-4 bg-transparent text-xl sm:text-2xl font-mono font-semibold text-[#F4F5F7] tabular-nums focus:outline-none"
+          aria-describedby={hitMax ? `${id}-max` : helperText ? `${id}-helper` : undefined}
+          className={`min-w-0 w-full py-3.5 pr-4 bg-transparent ${
+            displayValue.length > 9 ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'
+          } font-mono font-semibold text-[#F4F5F7] tabular-nums focus:outline-none`}
         />
         {suffix && (
           <span className="pr-4 text-sm font-mono text-[#9499A3] whitespace-nowrap select-none">
@@ -79,6 +88,12 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({
           </span>
         )}
       </div>
+
+      {hitMax && (
+        <p id={`${id}-max`} role="status" className="text-xs text-[#F59E0B]">
+          Valor máximo permitido: {formatBRL(MAX_MONEY_VALUE)}.
+        </p>
+      )}
 
       {quickAmounts && quickAmounts.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
@@ -88,7 +103,10 @@ export const MoneyInput: React.FC<MoneyInputProps> = ({
               <button
                 key={amt}
                 type="button"
-                onClick={() => onChange(amt)}
+                onClick={() => {
+                  setHitMax(false);
+                  onChange(amt);
+                }}
                 className={`min-h-[34px] px-2.5 py-1 text-xs font-mono tabular-nums rounded-lg border transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   isSelected
                     ? 'bg-[#10B981]/15 border-[#10B981]/50 text-[#10B981] font-medium'

@@ -16,7 +16,14 @@ export interface RouteMetadata {
     cdbPercentCdi?: number;
     compareA?: InvestmentProductType;
     compareB?: InvestmentProductType;
-    viewMode?: 'HOME' | 'CDB_CALCULATOR' | 'DIRECT_COMPARE' | 'GOAL_100K' | 'MONTHLY_INCOME' | 'SOURCES';
+    viewMode?:
+      | 'HOME'
+      | 'CDB_CALCULATOR'
+      | 'DIRECT_COMPARE'
+      | 'GOAL_100K'
+      | 'MONTHLY_INCOME'
+      | 'LEARN'
+      | 'SOURCES';
   };
   editorialNote?: string;
 }
@@ -254,6 +261,72 @@ export const SEO_ROUTES: Record<string, RouteMetadata> = {
     },
     editorialNote:
       'A combinação de aportes mensais constantes com uma taxa líquida superior reduz em vários meses o tempo necessário para atingir os primeiros R$ 100.000.',
+  },
+  '/comparar': {
+    path: '/comparar',
+    title: 'Comparar investimentos lado a lado | Meu Dinheiro',
+    description:
+      'Compare CDB, Tesouro Selic, LCI/LCA e Poupança lado a lado e veja a diferença líquida em reais para o seu valor e prazo.',
+    heading: 'Comparar investimentos',
+    subheading: 'Escolha duas alternativas e veja qual deixa mais dinheiro no seu bolso.',
+    preset: {
+      initialAmount: 10000,
+      months: 12,
+      compareA: 'CDB',
+      compareB: 'POUPANCA',
+      viewMode: 'DIRECT_COMPARE',
+    },
+  },
+  '/simulador-cdb': {
+    path: '/simulador-cdb',
+    title: 'Simulador de CDB: quanto rende seu CDB? | Meu Dinheiro',
+    description:
+      'Simule o rendimento líquido de um CDB em qualquer percentual do CDI, já descontando o Imposto de Renda regressivo.',
+    heading: 'Simulador de CDB',
+    subheading: 'Escolha o percentual do CDI e o prazo para ver o rendimento líquido do seu CDB.',
+    preset: {
+      initialAmount: 10000,
+      months: 12,
+      cdbPercentCdi: 100,
+      viewMode: 'CDB_CALCULATOR',
+    },
+  },
+  '/metas': {
+    path: '/metas',
+    title: 'Calculadora de metas financeiras | Meu Dinheiro',
+    description:
+      'Descubra em quanto tempo você atinge seu objetivo financeiro investindo mensalmente na renda fixa.',
+    heading: 'Planeje sua meta',
+    subheading: 'Informe quanto você tem, quanto investe por mês e aonde quer chegar.',
+    preset: {
+      initialAmount: 20000,
+      monthlyContribution: 1000,
+      targetAmount: 100000,
+      viewMode: 'GOAL_100K',
+    },
+  },
+  '/renda-mensal': {
+    path: '/renda-mensal',
+    title: 'Calculadora de renda passiva mensal | Meu Dinheiro',
+    description:
+      'Calcule quanto precisa investir para gerar a renda mensal desejada e quanto o seu patrimônio rende por mês.',
+    heading: 'Renda mensal',
+    subheading: 'Descubra quanto precisa acumular para viver de renda e quanto seu patrimônio já pode gerar.',
+    preset: {
+      desiredMonthlyIncome: 1000,
+      viewMode: 'MONTHLY_INCOME',
+    },
+  },
+  '/aprenda': {
+    path: '/aprenda',
+    title: 'Entenda CDI, Selic e Imposto de Renda | Meu Dinheiro',
+    description:
+      'Conceitos básicos para entender qualquer simulação de renda fixa: CDI, taxa Selic e Imposto de Renda regressivo.',
+    heading: 'Aprenda o básico',
+    subheading: 'Três conceitos rápidos para ler qualquer simulação de renda fixa.',
+    preset: {
+      viewMode: 'LEARN',
+    },
   },
   '/fontes': {
     path: '/fontes',

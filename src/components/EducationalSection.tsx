@@ -4,11 +4,13 @@ import { formatPercent } from '../services/simulationEngine';
 
 interface EducationalSectionProps {
   rates: MarketRates;
+  hideTitle?: boolean;
 }
 
-export const EducationalSection: React.FC<EducationalSectionProps> = ({ rates }) => {
+export const EducationalSection: React.FC<EducationalSectionProps> = ({ rates, hideTitle = false }) => {
   return (
     <section id="sobre" className="space-y-5">
+      {!hideTitle && (
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-semibold text-[#F4F5F7] tracking-tight">
           Entenda o básico sem complicação
@@ -17,6 +19,7 @@ export const EducationalSection: React.FC<EducationalSectionProps> = ({ rates })
           Três conceitos rápidos para ler qualquer simulação de renda fixa.
         </p>
       </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <article className="p-6 rounded-2xl bg-[#121418] border border-white/[0.07] space-y-3">

@@ -1,10 +1,14 @@
 export interface MarketRates {
   selic: number;
+  /** Selic efetiva (over), que é o que o Tesouro Selic de fato rende. */
+  selicOver?: number;
   cdi: number;
   ipca: number;
   poupancaAnnual: number;
   trMonthly: number;
   updatedAt: string;
+  /** Momento (ISO) em que as taxas foram consultadas. */
+  fetchedAt?: string;
   source: string;
   isLiveBcb: boolean;
   available: boolean;

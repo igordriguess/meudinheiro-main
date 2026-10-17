@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Minus, Plus } from 'lucide-react';
 import { MarketRates } from '../types/finance';
 import {
   formatBRL,
@@ -6,6 +7,7 @@ import {
   simulateSingleProduct,
 } from '../services/simulationEngine';
 import { MoneyInput } from './MoneyInput';
+import { fitAmount } from '../services/amountFit';
 import { PeriodSelector } from './PeriodSelector';
 
 interface CdbCalculatorProps {
@@ -14,9 +16,15 @@ interface CdbCalculatorProps {
   defaultMonths?: number;
   defaultPercentCdi?: number;
   onNavigateRoute?: (path: string) => void;
+  hideTitle?: boolean;
 }
 
 const CDI_PRESETS = [90, 100, 105, 110, 115, 120, 130];
+const MIN_PERCENT_CDI = 1;
+const MAX_PERCENT_CDI = 300;
+
+const clampPercent = (value: number) =>
+  Math.max(MIN_PERCENT_CDI, Math.min(MAX_PERCENT_CDI, Math.round(value)));
 
 export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
   rates,
@@ -24,10 +32,27 @@ export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
   defaultMonths = 12,
   defaultPercentCdi = 100,
   onNavigateRoute,
+  hideTitle = false,
 }) => {
   const [amount, setAmount] = useState(defaultAmount);
   const [months, setMonths] = useState(defaultMonths);
   const [percentCdi, setPercentCdi] = useState(defaultPercentCdi);
+  const [percentDraft, setPercentDraft] = useState(String(defaultPercentCdi));
+
+  useEffect(() => {
+    setPercentDraft(String(percentCdi));
+  }, [percentCdi]);
+
+  const commitPercentDraft = () => {
+    const parsed = Number(percentDraft);
+    if (percentDraft === '' || !Number.isFinite(parsed)) {
+      setPercentDraft(String(percentCdi));
+      return;
+    }
+    const next = clampPercent(parsed);
+    setPercentCdi(next);
+    setPercentDraft(String(next));
+  };
 
   useEffect(() => {
     setPercentCdi(defaultPercentCdi);
@@ -55,9 +80,10 @@ export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
   return (
     <section
       id="simulador-cdb"
-      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-6 sm:p-8 space-y-7"
+      className="bg-[#121418] border border-white/[0.08] rounded-2xl p-5 sm:p-8 space-y-7"
     >
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        {!hideTitle && (
         <div className="space-y-1">
           <p className="text-xs font-mono text-[#10B981]">FERRAMENTA ESPECÍFICA</p>
           <h2 className="text-2xl sm:text-3xl font-display font-semibold text-[#F4F5F7] tracking-tight">
@@ -67,6 +93,7 @@ export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
             Simule diferentes percentuais do CDI e veja o desconto exato do Imposto de Renda.
           </p>
         </div>
+        )}
 
         {onNavigateRoute && (
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#9499A3]">
@@ -98,7 +125,7 @@ export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-5">
           <MoneyInput
             id="cdb-amount"
@@ -115,7 +142,7 @@ export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
           />
 
           <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
               <label
                 htmlFor="custom-cdi-input"
                 className="text-sm font-medium text-[#F4F5F7]"
@@ -147,26 +174,65 @@ export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
               })}
             </div>
 
-            <div className="flex items-center gap-3 pt-1">
-              <span className="text-xs text-[#9499A3] whitespace-nowrap">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-1">
+              <label htmlFor="custom-cdi-input" className="text-xs text-[#9499A3] whitespace-nowrap">
                 Outro percentual:
-              </span>
-              <div className="flex items-center bg-[#0A0B0D] border border-white/[0.09] rounded-xl px-3 py-1.5 w-32">
-                <input
-                  id="custom-cdi-input"
-                  type="number"
-                  min={50}
-                  max={250}
-                  step={1}
-                  value={percentCdi}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    if (Number.isFinite(v)) setPercentCdi(Math.max(1, Math.min(300, v)));
-                  }}
-                  className="w-full bg-transparent text-sm font-mono font-semibold text-[#F4F5F7] tabular-nums focus:outline-none"
-                />
-                <span className="text-xs font-mono text-[#9499A3]">% CDI</span>
+              </label>
+              <div className="flex items-stretch overflow-hidden rounded-xl bg-[#0A0B0D] border border-white/[0.09] hover:border-white/[0.18] focus-within:border-[#10B981] focus-within:ring-1 focus-within:ring-[#10B981]/30 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setPercentCdi(clampPercent(percentCdi - 1))}
+                  disabled={percentCdi <= MIN_PERCENT_CDI}
+                  aria-label="Diminuir 1 ponto percentual"
+                  className="min-h-10 min-w-10 flex items-center justify-center text-[#9499A3] hover:text-[#F4F5F7] hover:bg-white/5 disabled:opacity-35 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors cursor-pointer border-r border-white/[0.07]"
+                >
+                  <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+                <div className="flex items-center gap-1.5 px-3">
+                  <input
+                    id="custom-cdi-input"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={3}
+                    value={percentDraft}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '');
+                      setPercentDraft(digits);
+                      const parsed = Number(digits);
+                      if (digits !== '' && parsed >= MIN_PERCENT_CDI && parsed <= MAX_PERCENT_CDI) {
+                        setPercentCdi(parsed);
+                      }
+                    }}
+                    onBlur={commitPercentDraft}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') commitPercentDraft();
+                      if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setPercentCdi(clampPercent(percentCdi + 1));
+                      }
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setPercentCdi(clampPercent(percentCdi - 1));
+                      }
+                    }}
+                    aria-describedby="custom-cdi-hint"
+                    className="w-10 bg-transparent text-right text-sm font-mono font-semibold text-[#F4F5F7] tabular-nums focus:outline-none"
+                  />
+                  <span className="text-xs font-mono text-[#9499A3] whitespace-nowrap">% do CDI</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPercentCdi(clampPercent(percentCdi + 1))}
+                  disabled={percentCdi >= MAX_PERCENT_CDI}
+                  aria-label="Aumentar 1 ponto percentual"
+                  className="min-h-10 min-w-10 flex items-center justify-center text-[#9499A3] hover:text-[#F4F5F7] hover:bg-white/5 disabled:opacity-35 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors cursor-pointer border-l border-white/[0.07]"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
               </div>
+              <span id="custom-cdi-hint" className="text-[11px] text-[#646973]">
+                De {MIN_PERCENT_CDI}% a {MAX_PERCENT_CDI}%
+              </span>
             </div>
           </div>
         </div>
@@ -176,46 +242,46 @@ export const CdbCalculator: React.FC<CdbCalculatorProps> = ({
             <span className="text-xs text-[#9499A3]">
               Valor final líquido em {formatMonthsHuman(months)}
             </span>
-            <p className="text-3xl sm:text-4xl font-mono font-semibold text-[#10B981] tabular-nums">
+            <p className={`${fitAmount(formatBRL(Math.round(result.finalAmount)), 'xl')} font-mono font-semibold text-[#10B981] tabular-nums`}>
               {formatBRL(Math.round(result.finalAmount))}
             </p>
           </div>
 
           <dl className="space-y-2.5 pt-4 border-t border-white/[0.07] text-sm">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
               <dt className="text-[#9499A3]">Valor investido</dt>
-              <dd className="font-mono text-[#F4F5F7] tabular-nums">
+              <dd className="ml-auto text-right wrap-anywhere font-mono text-[#F4F5F7] tabular-nums">
                 {formatBRL(Math.round(result.totalInvested))}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
               <dt className="text-[#9499A3]">Rendimento bruto</dt>
-              <dd className="font-mono text-[#F4F5F7] tabular-nums">
+              <dd className="ml-auto text-right wrap-anywhere font-mono text-[#F4F5F7] tabular-nums">
                 +{formatBRL(Math.round(result.grossReturn))}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
               <dt className="text-[#9499A3]">
                 Imposto de Renda ({result.taxRatePercent.toFixed(1).replace('.', ',')}%)
               </dt>
-              <dd className="font-mono text-[#9499A3] tabular-nums">
+              <dd className="ml-auto text-right wrap-anywhere font-mono text-[#9499A3] tabular-nums">
                 -{formatBRL(Math.round(result.taxes))}
               </dd>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] font-semibold">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 pt-2 border-t border-white/[0.06] font-semibold">
               <dt className="text-[#F4F5F7]">Rendimento líquido</dt>
-              <dd className="font-mono text-[#10B981] tabular-nums">
+              <dd className="ml-auto text-right wrap-anywhere font-mono text-[#10B981] tabular-nums">
                 +{formatBRL(Math.round(result.netReturn))}
               </dd>
             </div>
           </dl>
 
-          <div className="pt-3 border-t border-white/[0.06] text-xs text-[#9499A3] flex items-center justify-between">
+          <div className="pt-3 border-t border-white/[0.06] text-xs text-[#9499A3] flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
             <span>Diferença para a Poupança no mesmo prazo:</span>
-            <span className="font-mono font-semibold text-[#10B981] tabular-nums">
+            <span className="ml-auto text-right wrap-anywhere font-mono font-semibold text-[#10B981] tabular-nums">
               {extraOverPoupanca >= 0
                 ? `+${formatBRL(Math.round(extraOverPoupanca))}`
                 : formatBRL(Math.round(extraOverPoupanca))}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { SingleProductSimulation } from '../types/finance';
 import { formatBRL } from '../services/simulationEngine';
+import { fitAmount } from '../services/amountFit';
 
 interface InvestmentCardProps {
   item: SingleProductSimulation;
@@ -30,7 +31,7 @@ export const InvestmentCard: React.FC<InvestmentCardProps> = ({
           ) : (
             <p className="text-xs text-[#646973]">{item.subtitle}</p>
           )}
-          <div className="flex items-baseline justify-between gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-2">
             <h3 className="text-lg font-semibold text-[#F4F5F7]">{item.name}</h3>
             <span className="text-xs font-mono text-[#9499A3] tabular-nums">
               {item.rateLabel}
@@ -43,7 +44,7 @@ export const InvestmentCard: React.FC<InvestmentCardProps> = ({
             {formatBRL(item.totalInvested)} investidos viram:
           </span>
           <p
-            className={`mt-1 text-2xl sm:text-3xl font-mono font-semibold tabular-nums tracking-tight ${
+            className={`mt-1 ${fitAmount(formatBRL(Math.round(item.finalAmount)), 'lg')} font-mono font-semibold tabular-nums tracking-tight ${
               item.isBestOption ? 'text-[#10B981]' : 'text-[#F4F5F7]'
             }`}
           >
@@ -52,35 +53,44 @@ export const InvestmentCard: React.FC<InvestmentCardProps> = ({
         </div>
 
         <dl className="space-y-2 pt-3 border-t border-white/[0.06] text-xs sm:text-sm">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
             <dt className="text-[#9499A3]">Rendimento líquido</dt>
-            <dd className="font-mono font-medium text-[#10B981] tabular-nums">
+            <dd className="ml-auto text-right wrap-anywhere font-mono font-medium text-[#10B981] tabular-nums">
               +{formatBRL(Math.round(item.netReturn))}
             </dd>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
             <dt className="text-[#9499A3]">Rendimento bruto</dt>
-            <dd className="font-mono text-[#F4F5F7] tabular-nums">
+            <dd className="ml-auto text-right wrap-anywhere font-mono text-[#F4F5F7] tabular-nums">
               {formatBRL(Math.round(item.grossReturn))}
             </dd>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
             <dt className="text-[#9499A3]">
-              Imposto de Renda {item.isTaxExempt ? '(Isento)' : `(${item.taxRatePercent.toFixed(1).replace('.', ',')}%)`}
+              Imposto de Renda {item.isTaxExempt ? '' : `(${item.taxRatePercent.toFixed(1).replace('.', ',')}%)`}
             </dt>
-            <dd className="font-mono text-[#9499A3] tabular-nums">
-              {item.isTaxExempt ? 'R$ 0' : `-${formatBRL(Math.round(item.taxes))}`}
+            <dd className="ml-auto text-right wrap-anywhere font-mono text-[#9499A3] tabular-nums">
+              {item.isTaxExempt ? 'Isento' : `-${formatBRL(Math.round(item.taxes))}`}
             </dd>
           </div>
+
+          {item.feeAmount > 0 && (
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <dt className="text-[#9499A3]">Taxa de custódia B3 (0,20% a.a.)</dt>
+              <dd className="ml-auto text-right wrap-anywhere font-mono text-[#9499A3] tabular-nums">
+                -{formatBRL(Math.round(item.feeAmount))}
+              </dd>
+            </div>
+          )}
         </dl>
       </div>
 
-      <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
+      <div className="mt-5 pt-3 border-t border-white/[0.06] flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-xs">
         <span className="text-[#646973]">Diferença p/ menor opção</span>
         <span
-          className={`font-mono font-medium tabular-nums ${
+          className={`ml-auto text-right wrap-anywhere font-mono font-medium tabular-nums ${
             diffFromWorst > 0 ? 'text-[#F4F5F7]' : 'text-[#646973]'
           }`}
         >

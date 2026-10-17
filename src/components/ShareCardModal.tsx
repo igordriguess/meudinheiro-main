@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FullSimulationResult } from '../types/finance';
 import { formatBRL, formatMonthsHuman } from '../services/simulationEngine';
+import { fitAmount } from '../services/amountFit';
 import { X, Check, Share2, Copy } from 'lucide-react';
 
 interface ShareCardModalProps {
@@ -107,12 +108,12 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
           <div className="pt-2">
             <span className="text-xs text-[#9499A3] block">Resultado líquido estimado:</span>
-            <p className="text-3xl font-mono font-semibold text-[#10B981] tabular-nums mt-0.5">
+            <p className={`${fitAmount(formatBRL(Math.round(bestProduct.finalAmount)), 'md')} font-mono font-semibold text-[#10B981] tabular-nums mt-0.5`}>
               {formatBRL(Math.round(bestProduct.finalAmount))}
             </p>
           </div>
 
-          <div className="pt-3 border-t border-white/[0.07] flex items-center justify-between text-xs text-[#9499A3]">
+          <div className="pt-3 border-t border-white/[0.07] flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs text-[#9499A3]">
             <span>Rendimento líquido: +{formatBRL(Math.round(bestProduct.netReturn))}</span>
             <span>Simule no Meu Dinheiro</span>
           </div>

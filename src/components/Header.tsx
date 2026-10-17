@@ -1,65 +1,23 @@
 import React, { useState } from 'react';
-import {
-  BarChart3,
-  BookOpen,
-  ChevronRight,
-  Database,
-  Goal,
-  WalletCards,
-  Menu,
-  Scale,
-  X,
-} from 'lucide-react';
+import { ChevronRight, Menu, X } from 'lucide-react';
+import { APP_PAGES, ViewMode } from '../services/navigation';
 
 interface HeaderProps {
-  currentPath: string;
-  onNavigate: (path: string, sectionId?: string) => void;
+  activeViewMode: ViewMode;
+  onNavigate: (path: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
+export const Header: React.FC<HeaderProps> = ({ activeViewMode, onNavigate }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleLinkClick = (path: string, sectionId?: string) => {
+  const handleLinkClick = (path: string) => {
     setMobileMenuOpen(false);
-    onNavigate(path, sectionId);
+    onNavigate(path);
   };
-
-  const mobileLinks = [
-    {
-      label: 'Simulador principal',
-      icon: BarChart3,
-      path: '/',
-      sectionId: 'simulador',
-    },
-    {
-      label: 'Comparar investimentos',
-      icon: Scale,
-      path: '/',
-      sectionId: 'comparar',
-    },
-    {
-      label: 'Simular pelo patrimônio',
-      icon: WalletCards,
-      path: '/',
-      sectionId: 'simule-pelo-patrimonio',
-    },
-    {
-      label: 'Planejar objetivos',
-      icon: Goal,
-      path: '/',
-      sectionId: 'objetivo-100k',
-    },
-    {
-      label: 'Educação financeira',
-      icon: BookOpen,
-      path: '/',
-      sectionId: 'sobre',
-    },
-  ];
 
   return (
     <header className="sticky top-0 z-40 bg-[#0A0B0D]/90 backdrop-blur-md border-b border-white/[0.07]">
-      <div className="max-w-285 mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <a
           href="/"
           onClick={(e) => {
@@ -71,69 +29,41 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
           MEU DINHEIRO
         </a>
 
-        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-[#9499A3]">
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/', 'simulador')}
-            className="hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Simulador
-          </button>
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/', 'comparar')}
-            className="hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Comparar
-          </button>
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/', 'simule-pelo-patrimonio')}
-            className="hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Patrimônio
-          </button>
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/', 'objetivo-100k')}
-            className="hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Objetivos
-          </button>
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/', 'sobre')}
-            className="hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Sobre
-          </button>
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/fontes')}
-            className={`hover:text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap ${
-              currentPath === '/fontes' ? 'text-[#10B981]' : ''
-            }`}
-          >
-            Fontes
-          </button>
+        <nav
+          className="hidden lg:flex items-center gap-1 text-sm font-medium text-[#9499A3]"
+          aria-label="Navegação principal"
+        >
+          {APP_PAGES.map(({ path, label, viewMode }) => {
+            const isActive = viewMode === activeViewMode;
+            return (
+              <a
+                key={path}
+                href={path}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLinkClick(path);
+                }}
+                aria-current={isActive ? 'page' : undefined}
+                className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+                  isActive
+                    ? 'bg-[#10B981]/10 text-[#10B981]'
+                    : 'hover:text-[#F4F5F7] hover:bg-white/5'
+                }`}
+              >
+                {label}
+              </a>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/cdb-100-cdi')}
-            className="hidden sm:inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-[#F4F5F7] bg-[#121418] border border-white/10 rounded-lg hover:border-[#10B981]/60 transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Simular CDB
-          </button>
-
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
-            className={`md:hidden min-h-10.5 min-w-10.5 flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
+            className={`lg:hidden min-h-10.5 min-w-10.5 flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
               mobileMenuOpen
                 ? 'bg-[#10B981]/10 border-[#10B981]/35 text-[#10B981]'
                 : 'border-transparent text-[#9499A3] hover:text-[#F4F5F7] hover:bg-white/5'
@@ -150,63 +80,47 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate }) => {
             type="button"
             aria-label="Fechar menu"
             onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-x-0 top-14 bottom-0 bg-black/55 md:hidden cursor-default"
+            className="fixed inset-x-0 top-14 bottom-0 bg-black/55 lg:hidden cursor-default"
           />
 
           <div
             id="mobile-navigation"
-            className="fixed inset-x-0 top-14 md:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-white/10 bg-[#121418] shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+            className="fixed inset-x-0 top-14 lg:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-b border-white/10 bg-[#121418] shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
           >
-            <div className="mx-auto max-w-285 px-4 py-5 sm:px-6">
-              <nav className="grid grid-cols-1 gap-2" aria-label="Navegação mobile">
-                {mobileLinks.map(({ label, icon: Icon, path, sectionId }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => handleLinkClick(path, sectionId)}
-                    className="group flex min-h-15 items-center gap-3 rounded-xl border border-white/7 bg-[#0A0B0D]/60 px-3.5 py-3 text-left transition-colors hover:border-[#10B981]/35 hover:bg-[#10B981]/6"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/6 text-[#10B981] transition-colors group-hover:bg-[#10B981]/15">
-                      <Icon className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-[#F4F5F7]">{label}</span>
-                    </span>
-                    <ChevronRight
-                      className="h-4 w-4 shrink-0 text-[#646973] transition-transform group-hover:translate-x-0.5 group-hover:text-[#10B981]"
-                      aria-hidden="true"
-                    />
-                  </button>
-                ))}
+            <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6">
+              <nav className="grid grid-cols-1 sm:grid-cols-2 gap-2" aria-label="Navegação mobile">
+                {APP_PAGES.map(({ label, description, icon: Icon, path, viewMode }) => {
+                  const isActive = viewMode === activeViewMode;
+                  return (
+                    <a
+                      key={path}
+                      href={path}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleLinkClick(path);
+                      }}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`group flex min-h-15 items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors ${
+                        isActive
+                          ? 'border-[#10B981]/35 bg-[#10B981]/8'
+                          : 'border-white/7 bg-[#0A0B0D]/60 hover:border-[#10B981]/35 hover:bg-[#10B981]/6'
+                      }`}
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/6 text-[#10B981] transition-colors group-hover:bg-[#10B981]/15">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-[#F4F5F7]">{label}</span>
+                        <span className="block text-xs text-[#9499A3] leading-snug">{description}</span>
+                      </span>
+                      <ChevronRight
+                        className="h-4 w-4 shrink-0 text-[#646973] transition-transform group-hover:translate-x-0.5 group-hover:text-[#10B981]"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  );
+                })}
               </nav>
-
-              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => handleLinkClick('/cdb-100-cdi')}
-                  className="flex min-h-12 items-center gap-3 rounded-xl border border-[#10B981]/25 bg-[#10B981]/8 px-3.5 text-left transition-colors hover:bg-[#10B981]/15"
-                >
-                  <BarChart3 className="h-4 w-4 text-[#10B981]" aria-hidden="true" />
-                  <span>
-                    <span className="block text-sm font-semibold text-[#F4F5F7]">Simular CDB</span>
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleLinkClick('/fontes')}
-                  className={`flex min-h-12 items-center gap-3 rounded-xl border px-3.5 text-left transition-colors ${
-                    currentPath === '/fontes'
-                      ? 'border-[#10B981]/35 bg-[#10B981]/8'
-                      : 'border-white/7 bg-[#0A0B0D]/60 hover:border-white/18 hover:bg-white/5'
-                  }`}
-                >
-                  <Database className="h-4 w-4 text-[#10B981]" aria-hidden="true" />
-                  <span>
-                    <span className="block text-sm font-semibold text-[#F4F5F7]">Fontes de dados</span>
-                  </span>
-                </button>
-              </div>
             </div>
           </div>
         </>

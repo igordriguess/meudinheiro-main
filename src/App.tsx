@@ -13,6 +13,7 @@ import {
 } from './services/simulationEngine';
 import { fetchMarketRatesClient, fetchTreasuryProductsClient } from './services/apiClient';
 import { SEO_ROUTES } from './services/seoRoutes';
+import { getPageByViewMode, ViewMode } from './services/navigation';
 import { Header } from './components/Header';
 import { SimulationForm } from './components/SimulationForm';
 import { SimulationResult } from './components/SimulationResult';
@@ -27,6 +28,9 @@ import { EducationalSection } from './components/EducationalSection';
 import { DataSource } from './components/DataSource';
 import { Disclaimer } from './components/Disclaimer';
 import { Footer } from './components/Footer';
+import { MAX_MONEY_VALUE } from './components/MoneyInput';
+import { PageHeader } from './components/PageHeader';
+import { ToolLinks } from './components/ToolLinks';
 import { ArrowUp } from 'lucide-react';
 
 export function App() {
@@ -102,10 +106,10 @@ export function App() {
 
     if (qInicial !== null || qMensal !== null || qMeses !== null) {
       if (qInicial !== null && Number.isFinite(Number(qInicial))) {
-        setInitialAmount(Math.max(0, Number(qInicial)));
+        setInitialAmount(Math.min(MAX_MONEY_VALUE, Math.max(0, Number(qInicial))));
       }
       if (qMensal !== null && Number.isFinite(Number(qMensal))) {
-        setMonthlyContribution(Math.max(0, Number(qMensal)));
+        setMonthlyContribution(Math.min(MAX_MONEY_VALUE, Math.max(0, Number(qMensal))));
       }
       if (qMeses !== null && Number.isFinite(Number(qMeses))) {
         setMonths(Math.max(1, Math.min(360, Number(qMeses))));
@@ -148,41 +152,24 @@ export function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navigateTo = (path: string, sectionId?: string) => {
+  const navigateTo = (path: string) => {
     const cleanPath = SEO_ROUTES[path] ? path : '/';
     if (cleanPath !== currentPath) {
       window.history.pushState({}, '', cleanPath);
       setCurrentPath(cleanPath);
     }
-    if (sectionId) {
-      setTimeout(() => {
-        const el = document.getElementById(sectionId);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 60);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: cleanPath !== currentPath ? 'auto' : 'smooth' });
   };
 
-  const simulation = useMemo(() => {
-    return runFullSimulation({
-      initialAmount,
-      monthlyContribution,
-      months,
-      rates,
-      cdbPercentCdi: 100,
-      lciPercentCdi: 90,
-    });
-  }, [initialAmount, monthlyContribution, months, rates]);
-
   const goalTimelineResults = useMemo(() => {
+    if (goalType !== 'TARGET_AMOUNT') return [];
     return calculateGoalTimeline({
       initialAmount,
       monthlyContribution,
       targetAmount,
       rates,
     });
-  }, [initialAmount, monthlyContribution, targetAmount, rates]);
+  }, [goalType, initialAmount, monthlyContribution, targetAmount, rates]);
 
   const monthlyIncomeResults = useMemo(() => {
     return calculateRequiredForMonthlyIncome({
@@ -190,6 +177,41 @@ export function App() {
       rates,
     });
   }, [desiredMonthlyIncome, rates]);
+
+  // Tempo para cada investimento acumular o próprio patrimônio que gera a renda desejada.
+  const incomeGoalTimeline = useMemo(() => {
+    if (goalType !== 'MONTHLY_INCOME') return [];
+    const results = monthlyIncomeResults.map(
+      (income) =>
+        calculateGoalTimeline({
+          initialAmount,
+          monthlyContribution,
+          targetAmount: income.requiredCapital,
+          rates,
+          products: [income.product],
+        })[0]
+    );
+    const fastestMonths = Math.min(...results.map((r) => r.monthsToReach));
+    return results.map((r) => ({ ...r, isFastest: r.monthsToReach === fastestMonths }));
+  }, [goalType, initialAmount, monthlyContribution, monthlyIncomeResults, rates]);
+
+  // O prazo só é escolhido em "Fazer meu dinheiro render"; nas metas, a projeção vai até atingi-las.
+  const projectionMonths = useMemo(() => {
+    const timeline = goalType === 'TARGET_AMOUNT' ? goalTimelineResults : incomeGoalTimeline;
+    if (goalType === 'RENDER' || timeline.length === 0) return months;
+    return Math.max(1, Math.min(...timeline.map((r) => r.monthsToReach)));
+  }, [goalType, months, goalTimelineResults, incomeGoalTimeline]);
+
+  const simulation = useMemo(() => {
+    return runFullSimulation({
+      initialAmount,
+      monthlyContribution,
+      months: projectionMonths,
+      rates,
+      cdbPercentCdi: 100,
+      lciPercentCdi: 90,
+    });
+  }, [initialAmount, monthlyContribution, projectionMonths, rates]);
 
   const handleCalculateClick = () => {
     setHighlightKey((prev) => prev + 1);
@@ -200,70 +222,97 @@ export function App() {
   };
 
   const activeRouteMeta = SEO_ROUTES[currentPath] || SEO_ROUTES['/'];
-  const viewMode = activeRouteMeta.preset?.viewMode || 'HOME';
+  const viewMode: ViewMode = activeRouteMeta.preset?.viewMode || 'HOME';
+  const activePage = getPageByViewMode(viewMode);
+  const preset = activeRouteMeta.preset;
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#0A0B0D] text-[#F4F5F7]">
-      <Header currentPath={currentPath} onNavigate={navigateTo} />
+  const renderToolPage = (content: React.ReactNode) => (
+    <div className="space-y-10">
+      <PageHeader
+        page={activePage}
+        heading={activeRouteMeta.heading || activePage.label}
+        subheading={activeRouteMeta.subheading}
+        editorialNote={activeRouteMeta.editorialNote}
+      />
+      {content}
+      <ToolLinks currentViewMode={viewMode} onNavigate={(p) => navigateTo(p)} />
+      <Disclaimer />
+    </div>
+  );
 
-      <main className="flex-1 w-full max-w-285 mx-auto px-4 sm:px-6 pt-8 sm:pt-12 space-y-12 sm:space-y-16">
-        {viewMode === 'SOURCES' ? (
-          <div className="space-y-8 max-w-4xl mx-auto">
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => navigateTo('/')}
-                className="text-xs font-medium text-[#10B981] hover:underline cursor-pointer"
-              >
-                ← Voltar para a calculadora principal
-              </button>
-              <h1 className="text-3xl sm:text-4xl font-display font-semibold text-[#F4F5F7] tracking-tight">
-                {activeRouteMeta.heading}
-              </h1>
-              <p className="text-base text-[#9499A3]">{activeRouteMeta.subheading}</p>
-            </div>
+  const renderPage = () => {
+    switch (viewMode) {
+      case 'DIRECT_COMPARE':
+        return renderToolPage(
+          <ComparisonCard
+            rates={rates}
+            defaultProductA={compareProductA}
+            defaultProductB={compareProductB}
+            defaultAmount={preset?.initialAmount ?? 10000}
+            defaultMonths={preset?.months ?? 12}
+            onNavigateRoute={(p) => navigateTo(p)}
+            hideTitle
+          />
+        );
 
-            <DataSource
+      case 'CDB_CALCULATOR':
+        return renderToolPage(
+          <CdbCalculator
+            rates={rates}
+            defaultAmount={preset?.initialAmount ?? 10000}
+            defaultMonths={preset?.months ?? 12}
+            defaultPercentCdi={cdbPresetPercent}
+            onNavigateRoute={(p) => navigateTo(p)}
+            hideTitle
+          />
+        );
+
+      case 'GOAL_100K':
+        return renderToolPage(
+          <GoalCalculator
+            rates={rates}
+            defaultInitial={preset?.initialAmount ?? 20000}
+            defaultMonthly={preset?.monthlyContribution ?? 1000}
+            defaultTarget={preset?.targetAmount ?? 100000}
+            hideTitle
+          />
+        );
+
+      case 'MONTHLY_INCOME':
+        return renderToolPage(
+          <div className="space-y-8">
+            <MonthlyIncomeCalculator
               rates={rates}
-              treasuryProducts={treasuryProducts}
-              isFullPage={true}
+              defaultIncome={preset?.desiredMonthlyIncome ?? 1000}
             />
-            <Disclaimer />
+            <PassiveIncomeByCapital
+              rates={rates}
+              defaultCapital={simulation.bestProduct.finalAmount}
+            />
           </div>
-        ) : (
+        );
+
+      case 'LEARN':
+        return renderToolPage(<EducationalSection rates={rates} hideTitle />);
+
+      case 'SOURCES':
+        return renderToolPage(
+          <DataSource rates={rates} treasuryProducts={treasuryProducts} isFullPage={true} />
+        );
+
+      default:
+        return (
           <>
-            <section id="simulador" className="max-w-180 mx-auto space-y-7">
-              <div className="space-y-2.5 text-left sm:text-center">
-                {currentPath !== '/' && (
-                  <div className="flex sm:justify-center">
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('/')}
-                      className="text-xs font-medium text-[#10B981] hover:underline cursor-pointer"
-                    >
-                      ← Ver simulador geral
-                    </button>
-                  </div>
-                )}
-
-                <h1
-                  className="text-3xl sm:text-4xl md:text-5xl font-display font-semibold text-[#F4F5F7] tracking-tight"
-                  style={{ textWrap: 'balance' }}
-                >
-                  {activeRouteMeta.heading || 'Quanto seu dinheiro pode render?'}
-                </h1>
-
-                <p className="text-base sm:text-lg text-[#9499A3] max-w-xl sm:mx-auto">
-                  {activeRouteMeta.subheading ||
-                    'Compare investimentos e descubra quanto você pode ter no final.'}
-                </p>
-              </div>
-
-              {activeRouteMeta.editorialNote && (
-                <div className="p-4 rounded-xl bg-[#121418] border border-white/[0.07] text-xs sm:text-sm text-[#9499A3] leading-relaxed">
-                  {activeRouteMeta.editorialNote}
-                </div>
-              )}
+            <section id="simulador" className="space-y-7">
+              <PageHeader
+                page={activePage}
+                heading={activeRouteMeta.heading || 'Quanto seu dinheiro pode render?'}
+                subheading={
+                  activeRouteMeta.subheading ||
+                  'Compare investimentos e descubra quanto você pode ter no final.'
+                }
+                editorialNote={activeRouteMeta.editorialNote}
+              />
 
               <SimulationForm
                 initialAmount={initialAmount}
@@ -287,171 +336,41 @@ export function App() {
                 simulation={simulation}
                 goalType={goalType}
                 goalTimelineResults={goalTimelineResults}
+                incomeGoalTimeline={incomeGoalTimeline}
                 targetAmount={targetAmount}
                 monthlyIncomeResults={monthlyIncomeResults}
                 desiredMonthlyIncome={desiredMonthlyIncome}
                 highlightKey={highlightKey}
                 onOpenShareModal={() => setIsShareModalOpen(true)}
+                onNavigate={(p) => navigateTo(p)}
               />
-
             </div>
 
             <ComparisonTable simulation={simulation} />
 
-            <section className="space-y-6" aria-labelledby="analysis-heading">
-              <div className="border-t border-white/8 pt-8">
-                <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
-                  ANÁLISE DA PROJEÇÃO
-                </p>
-                <h2
-                  id="analysis-heading"
-                  className="mt-1 text-2xl sm:text-3xl font-display font-semibold text-[#F4F5F7]"
-                >
-                  Acompanhe a evolução do seu patrimônio
-                </h2>
-                <p className="mt-1 text-sm text-[#9499A3]">
-                  Veja o crescimento ao longo do tempo e o potencial de renda mensal do valor acumulado.
-                </p>
-              </div>
+            <PerformanceChart timeline={simulation.timeline} />
 
-              <PerformanceChart timeline={simulation.timeline} />
-
-              <PassiveIncomeByCapital
-                rates={rates}
-                defaultCapital={simulation.bestProduct.finalAmount}
-              />
-            </section>
-
-            <section className="space-y-8" aria-labelledby="tools-heading">
-              <div className="border-t border-white/8 pt-8">
-                <p className="text-xs font-mono font-semibold tracking-[0.12em] text-[#10B981]">
-                  FERRAMENTAS PARA DECIDIR
-                </p>
-                <h2
-                  id="tools-heading"
-                  className="mt-1 text-2xl sm:text-3xl font-display font-semibold text-[#F4F5F7]"
-                >
-                  Planeje os próximos passos
-                </h2>
-                <p className="mt-1 text-sm text-[#9499A3]">
-                  Explore metas, renda mensal e comparações com os mesmos critérios da simulação principal.
-                </p>
-              </div>
-
-              <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Atalhos de planejamento">
-                <div className="p-6 rounded-2xl bg-[#121418] border border-white/8 flex flex-col justify-between space-y-4">
-                  <div className="space-y-1">
-                    <span className="text-xs font-mono text-[#10B981]">
-                      PLANEJAMENTO POR OBJETIVO
-                    </span>
-                    <h3 className="text-lg font-display font-semibold text-[#F4F5F7]">
-                      Quer atingir um objetivo específico?
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[#9499A3]">
-                      Descubra em quanto tempo você chega aos R$ 100 mil ou quanto precisa acumular para gerar R$ 1.000 por mês.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('/como-chegar-aos-100-mil', 'objetivo-100k')}
-                      className="min-h-10.5 px-4 py-2 rounded-xl bg-white/7 hover:bg-white/12 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      Chegar a R$ 100 mil
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigateTo('/quanto-preciso-investir-para-ganhar-1000', 'renda-mensal')
-                      }
-                      className="min-h-10.5 px-4 py-2 rounded-xl bg-white/7 hover:bg-white/12 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      Gerar R$ 1.000/mês
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-[#121418] border border-white/8 flex flex-col justify-between space-y-4">
-                  <div className="space-y-1">
-                    <span className="text-xs font-mono text-[#10B981]">
-                      COMPARATIVOS RÁPIDOS
-                    </span>
-                    <h3 className="text-lg font-display font-semibold text-[#F4F5F7]">
-                      Compare investimentos lado a lado
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[#9499A3]">
-                      Veja a diferença líquida direta entre duas alternativas para qualquer valor:
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('/cdb-ou-poupanca', 'comparacao-direta')}
-                      className="min-h-10 px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/8 hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      CDB x Poupança
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('/cdb-ou-tesouro-selic', 'comparacao-direta')}
-                      className="min-h-10 px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/8 hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      CDB x Tesouro
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigateTo('/lci-ou-cdb', 'comparacao-direta')}
-                      className="min-h-10 px-3.5 py-2 rounded-xl bg-[#0A0B0D] border border-white/8 hover:border-[#10B981]/50 text-xs font-medium text-[#F4F5F7] transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      LCI x CDB
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <GoalCalculator
-                rates={rates}
-                defaultInitial={activeRouteMeta.preset?.initialAmount ?? 20000}
-                defaultMonthly={activeRouteMeta.preset?.monthlyContribution ?? 1000}
-                defaultTarget={activeRouteMeta.preset?.targetAmount ?? 100000}
-              />
-
-              <MonthlyIncomeCalculator
-                rates={rates}
-                defaultIncome={activeRouteMeta.preset?.desiredMonthlyIncome ?? 1000}
-              />
-
-              <CdbCalculator
-                rates={rates}
-                defaultAmount={10000}
-                defaultMonths={12}
-                defaultPercentCdi={cdbPresetPercent}
-                onNavigateRoute={(p) => navigateTo(p, 'simulador-cdb')}
-              />
-
-              <ComparisonCard
-                rates={rates}
-                defaultProductA={compareProductA}
-                defaultProductB={compareProductB}
-                defaultAmount={10000}
-                defaultMonths={12}
-                onNavigateRoute={(p) => navigateTo(p, 'comparacao-direta')}
-              />
-            </section>
-
-            <EducationalSection rates={rates} />
-
-            <DataSource
-              rates={rates}
-              treasuryProducts={treasuryProducts}
+            <ToolLinks
+              currentViewMode={viewMode}
               onNavigate={(p) => navigateTo(p)}
+              title="Continue planejando"
             />
 
             <Disclaimer />
           </>
-        )}
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#0A0B0D] text-[#F4F5F7]">
+      <Header activeViewMode={viewMode} onNavigate={navigateTo} />
+
+      <main
+        key={currentPath}
+        className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 space-y-12 sm:space-y-16"
+      >
+        {renderPage()}
       </main>
 
       <Footer onNavigate={navigateTo} />
